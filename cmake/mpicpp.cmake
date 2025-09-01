@@ -1,4 +1,4 @@
 CPMAddPackage(
-  "gh:sandialabs/mpicpp#main"
+  "gh:SriramKatta/mpicpp#main"
 )
 
