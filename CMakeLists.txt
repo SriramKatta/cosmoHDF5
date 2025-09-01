@@ -29,5 +29,6 @@ endif()
 include(cmake/CPM.cmake)
 include(cmake/fmt.cmake)
 include(cmake/mpicpp.cmake)
+include(cmake/argparse.cmake)
 
 add_subdirectory(proj)
