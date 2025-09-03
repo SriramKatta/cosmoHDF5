@@ -1,47 +1,17 @@
 #include <fmt/format.h>
-#include <unistd.h>
 #include <mpicpp.hpp>
 #include <tuple>
-#include <argparse/argparse.hpp>
 #include <filesystem>
-#include "main.h"
-
-int exception_handler()
-{
-  try
-  {
-    throw;
-  }
-  catch (const std::filesystem::filesystem_error &e)
-  {
-    fmt::print(stderr, "Filesystem error caught: {}\n", e.what());
-  }
-    catch (std::exception &e)
-  {
-    fmt::print(stderr, "Exception caught: {}\n", e.what());
-  }
-  return EXIT_FAILURE;
-}
+#include <H5Cpp.h>
+#include "main.hpp"
 
 namespace fs = std::filesystem;
-fs::path parser(int &argc, char **&argv)
-{
-  fs::path filedir;
-  argparse::ArgumentParser program("read_files");
-  program.add_argument("infiles_dir")
-      .help("Directory containing input files")
-      .default_value(fs::path("."))
-      .store_into(filedir);
-
-  program.parse_args(argc, argv);
-  return filedir;
-}
 
 int main(int argc, char **argv)
 try
 {
   auto env = mpicpp::environment(&argc, &argv);
-
+  H5::Exception::dontPrint();
   auto infiles_dir = parser(argc, argv);
 
   int numfiles = count_hdf5_files(infiles_dir);
@@ -49,6 +19,7 @@ try
   auto world_comm = mpicpp::comm::world();
   auto w_rank = world_comm.rank();
   auto w_size = world_comm.size();
+
 
   auto outfiles_dir = infiles_dir / "out";
   if (w_rank == 0)
@@ -60,45 +31,65 @@ try
   {
     if (w_rank == 0)
     {
-      fmt::print(stderr, "Not enough MPI ranks({}) available for the number of files({})\n", w_size, numfiles);
+      throw std::runtime_error(fmt::format("Not enough MPI ranks({}) available for the number of files({})\n", w_size, numfiles));
     }
     return EXIT_FAILURE;
   }
-  auto computed_island_size = w_size / numfiles;
-  auto island_key = w_rank / computed_island_size;
-  auto islan_comm = world_comm.split(island_key, w_rank);
+
+  auto island_colour = get_island_colour(w_rank, w_size, numfiles);
+  auto islan_comm = world_comm.split(island_colour, w_rank);
   auto i_rank = islan_comm.rank();
   auto i_size = islan_comm.size();
 
-  auto fname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_key);
+  auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
+  fmt::print("numfiles {} | {}\n",numfiles, ifname);
+
+
+  std::vector<double> total_coordinates;
+
+  debug_print_info(w_rank, w_size, i_rank, i_size, ifname);
+
   if (i_rank == 0)
   {
-    
+    total_coordinates = read_1proc_perisland<double>(ifname, "Coordinates");
   }
+
+  world_comm.barrier();
+  auto local_data = distribute_data<double, 3>(total_coordinates, islan_comm);
+  #if 1
   
+
+    auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
+    auto facc = create_mpi_fapl(islan_comm);
+    H5::H5File testFile(ofname, H5F_ACC_TRUNC, facc);
+    std::array<hsize_t, 2> dims{static_cast<hsize_t>(total_coordinates.size()), 3};
+    H5::DataSpace filespace(2, dims.data(), NULL);
+    auto dataset_handle = testFile.createDataSet("Coordinates", H5::PredType::NATIVE_DOUBLE, filespace);
+    int start_index = 0;
+    int numpart_local = local_data.size();
+    MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (i_rank == 0)
+      start_index = 0;
+
+    std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
+    std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
+    std::array<hsize_t, 2> stride{1, 1};
+    std::array<hsize_t, 2> blocks{1, 1};
+    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+    std::vector<hsize_t> tds{total_coordinates.size(), 3};
+    auto memspace = H5::DataSpace(tds.size(), tds.data(), NULL);
+
+    auto prop = create_mpi_xfer();
+
+    dataset_handle.write(local_data.data(), H5::PredType::NATIVE_DOUBLE, memspace, filespace, prop);
+  #endif
+
+  return EXIT_SUCCESS;
 }
 catch (...)
 {
+  fmt::print(stderr, "exception caught\n");
   return exception_handler();
-}
-
-int count_hdf5_files(std::filesystem::__cxx11::path &infiles_dir)
-{
-  int numfiles{0};
-  for (auto &i : fs::directory_iterator(infiles_dir))
-  {
-    auto fname = i.path();
-    if (fname.stem().string().find("snap_") != std::string::npos && fname.extension() == ".hdf5")
-    {
-      ++numfiles;
-    }
-  }
-  if (numfiles == 0)
-  {
-    fmt::print(stderr, "No snap HDF5 files found in directory: {}\n", infiles_dir.string());
-    throw std::runtime_error("No snap HDF5 files found");
-  }
-  return numfiles;
 }
 
 // proper way bu too much work for now
