@@ -22,18 +22,14 @@ try
 
 
   auto outfiles_dir = infiles_dir / "out";
-  if (w_rank == 0)
-  {
-    fs::create_directories(outfiles_dir);
-  }
+  // if (w_rank == 0)
+  // {
+  // }
+  fs::create_directories(outfiles_dir);
 
   if (w_size < numfiles)
   {
-    if (w_rank == 0)
-    {
-      throw std::runtime_error(fmt::format("Not enough MPI ranks({}) available for the number of files({})\n", w_size, numfiles));
-    }
-    return EXIT_FAILURE;
+    throw std::runtime_error(fmt::format("Not enough MPI ranks({}) available for the number of files({})\n", w_size, numfiles));
   }
 
   auto island_colour = get_island_colour(w_rank, w_size, numfiles);
@@ -42,7 +38,7 @@ try
   auto i_size = islan_comm.size();
 
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
-  fmt::print("numfiles {} | {}\n",numfiles, ifname);
+  // fmt::print("numfiles {} | {}\n",numfiles, ifname);
 
 
   std::vector<double> total_coordinates;
@@ -54,9 +50,10 @@ try
     total_coordinates = read_1proc_perisland<double>(ifname, "Coordinates");
   }
 
-  world_comm.barrier();
+
   auto local_data = distribute_data<double, 3>(total_coordinates, islan_comm);
-  #if 1
+
+  #if 0
   
 
     auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);

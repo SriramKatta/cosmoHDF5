@@ -3,6 +3,7 @@
 #include <exception>
 #include <mpicpp.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <filesystem>
 #include <argparse/argparse.hpp>
 #include <unistd.h>
@@ -181,40 +182,61 @@ std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::strin
 template <typename VT, size_t DIM>
 std::vector<VT> distribute_data(const std::vector<VT> &g_data, const mpicpp::comm &islan_comm)
 {
-
-  // Distribute the data among the processes
+  // throw mpicpp::exception("distribute not implemented right");
+#if 0
+      auto wrl = mpicpp::comm::world();
+      fmt::print("World: rank {}/{} | Island: rank {}/{}\n", wrl.rank(), wrl.size(), islan_comm.rank(), islan_comm.size());
+#endif
   int rank = islan_comm.rank();
   int size = islan_comm.size();
-  int total_elems = g_data.size() / DIM;
-  int elems_per_rank = total_elems / size;
-  int remainder = total_elems % size;
 
-  // Calculate send counts and displacements
-  std::vector<int> sendcounts(size, elems_per_rank);
+  int total_entries = g_data.size() / DIM; // logical rows
+  int base_entries = total_entries / size;
+  int remainder = total_entries % size;
+
+  // Send counts in terms of number of VT elements
+  std::vector<int> sendcounts(size, base_entries * DIM);
   std::vector<int> displs(size, 0);
+
   for (int i = 0; i < remainder; ++i)
-    sendcounts[i] += 1 * DIM;
+  {
+    sendcounts[i] += DIM; // give one extra row (DIM elements) to first `remainder` ranks
+  }
 
   for (int i = 1; i < size; ++i)
+  {
     displs[i] = displs[i - 1] + sendcounts[i - 1];
+  }
 
+  
+  MPI_Datatype mpi_type = MPI_DOUBLE;
+  
+  mpicpp::handle_error(
+    MPI_Bcast(sendcounts.data(), sendcounts.size(), MPI_INT, 0, islan_comm.get())
+  );
+  mpicpp::handle_error(
+    MPI_Bcast(displs.data(), displs.size(), MPI_INT, 0, islan_comm.get())
+  );
+  
   std::vector<VT> local_data(sendcounts[rank]);
 
-  // Scatter the data using standard MPI_Scatterv
-  MPI_Datatype mpi_type = std::is_same<VT, double>::value ? MPI_DOUBLE : std::is_same<VT, float>::value ? MPI_FLOAT
-                                                                     : std::is_same<VT, int>::value     ? MPI_INT
-                                                                                                        : MPI_BYTE;
+  if (rank == 0)
+    fmt::print("send cts : {} | disp : {}\n", sendcounts, displs);
+  else
+    fmt::print("rank {} |  send cnts of rank {}\n", rank, sendcounts);
 
 
-  mpicpp::handle_error(MPI_Scatterv( (rank == 0)? g_data.data():nullptr,
-                                    sendcounts.data(),
-                                    displs.data(),
-                                    mpi_type,
-                                    local_data.data(),
-                                    sendcounts[rank],
-                                    mpi_type, 0,
-                                    islan_comm.get()));
-
+    
+  mpicpp::handle_error(MPI_Scatterv(
+      g_data.data(),
+      sendcounts.data(),
+      displs.data(),
+      mpi_type,
+      local_data.data(),
+      sendcounts[rank],
+      mpi_type,
+      0,
+      islan_comm.get()));
 
   return local_data;
 }
