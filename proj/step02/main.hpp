@@ -162,81 +162,119 @@ inline H5::DSetMemXferPropList create_mpi_xfer(H5FD_mpio_xfer_t mode = H5FD_MPIO
 }
 
 template <typename VT>
-std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::string &datasetname)
+std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::string &datasetname, const mpicpp::comm &island_comm)
 {
   std::vector<VT> data;
-  H5::H5File F_root(ifname, H5F_ACC_RDONLY);
-  auto G_header = F_root.openGroup("Header");
-  auto A_numpart_thisfile = G_header.openAttribute("NumPart_ThisFile");
-  auto A_numpart_total = G_header.openAttribute("NumPart_Total");
-  auto G_parttype = F_root.openGroup("PartType1");
-  auto ldata_numparts = readAttribute<int>(A_numpart_thisfile);
-  auto gdata_numparts = readAttribute<int>(A_numpart_total);
-  auto l_numparts = ldata_numparts[PARTIDX];
-  auto g_numparts = gdata_numparts[PARTIDX];
-  auto D_coordinate = G_parttype.openDataSet(datasetname);
-  data = readdataSet<VT>(D_coordinate);
+  if (island_comm.rank() == 0)
+  {
+    H5::H5File F_root(ifname, H5F_ACC_RDONLY);
+    auto G_header = F_root.openGroup("Header");
+    auto A_numpart_thisfile = G_header.openAttribute("NumPart_ThisFile");
+    auto A_numpart_total = G_header.openAttribute("NumPart_Total");
+    auto G_parttype = F_root.openGroup("PartType1");
+    auto ldata_numparts = readAttribute<int>(A_numpart_thisfile);
+    auto gdata_numparts = readAttribute<int>(A_numpart_total);
+    auto l_numparts = ldata_numparts[PARTIDX];
+    auto g_numparts = gdata_numparts[PARTIDX];
+    auto D_coordinate = G_parttype.openDataSet(datasetname);
+    data = readdataSet<VT>(D_coordinate);
+  }
   return data;
 }
 
-template <typename VT, size_t DIM>
-std::vector<VT> distribute_data(const std::vector<VT> &g_data, const mpicpp::comm &islan_comm)
+template <size_t COLS, typename VT = double>
+std::vector<VT> distribute_data(std::vector<VT> &g_data, const mpicpp::comm &islan_comm)
 {
-  // throw mpicpp::exception("distribute not implemented right");
-#if 0
-      auto wrl = mpicpp::comm::world();
-      fmt::print("World: rank {}/{} | Island: rank {}/{}\n", wrl.rank(), wrl.size(), islan_comm.rank(), islan_comm.size());
-#endif
+
   int rank = islan_comm.rank();
   int size = islan_comm.size();
 
-  int total_entries = g_data.size() / DIM; // logical rows
+  int total_entries = g_data.size() / COLS; // logical rows
   int base_entries = total_entries / size;
   int remainder = total_entries % size;
 
   // Send counts in terms of number of VT elements
-  std::vector<int> sendcounts(size, base_entries * DIM);
-  std::vector<int> displs(size, 0);
+  std::vector<int> sendcounts(size, base_entries * COLS);
+  std::vector<int> displacements(size, 0);
 
   for (int i = 0; i < remainder; ++i)
   {
-    sendcounts[i] += DIM; // give one extra row (DIM elements) to first `remainder` ranks
+    sendcounts[i] += COLS; // give one extra row (DIM elements) to first `remainder` ranks
   }
 
   for (int i = 1; i < size; ++i)
   {
-    displs[i] = displs[i - 1] + sendcounts[i - 1];
+    displacements[i] = displacements[i - 1] + sendcounts[i - 1];
   }
 
-  
-  MPI_Datatype mpi_type = MPI_DOUBLE;
-  
-  mpicpp::handle_error(
-    MPI_Bcast(sendcounts.data(), sendcounts.size(), MPI_INT, 0, islan_comm.get())
-  );
-  mpicpp::handle_error(
-    MPI_Bcast(displs.data(), displs.size(), MPI_INT, 0, islan_comm.get())
-  );
-  
+  // needed since g_data is filled only on rank 0
+  islan_comm.ibcast(sendcounts, 0);
+  islan_comm.ibcast(displacements, 0);
+
   std::vector<VT> local_data(sendcounts[rank]);
 
-  if (rank == 0)
-    fmt::print("send cts : {} | disp : {}\n", sendcounts, displs);
-  else
-    fmt::print("rank {} |  send cnts of rank {}\n", rank, sendcounts);
-
-
-    
-  mpicpp::handle_error(MPI_Scatterv(
-      g_data.data(),
-      sendcounts.data(),
-      displs.data(),
-      mpi_type,
-      local_data.data(),
-      sendcounts[rank],
-      mpi_type,
-      0,
-      islan_comm.get()));
+  islan_comm.iscatterv(g_data, sendcounts, displacements, local_data, 0);
 
   return local_data;
+}
+
+H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour)
+{
+  auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
+  auto facc = create_mpi_fapl(island_comm);
+  return {ofname, H5F_ACC_TRUNC, facc};
+}
+
+template <size_t COLS, typename VT = double>
+void mpi_filldata(H5::Group &group, const std::string &datasetname, const std::vector<VT> &data_chunk, mpicpp::comm &island_comm)
+{
+  const int local_data_size{static_cast<int>(data_chunk.size()) / COLS};
+  int global_data_size{0};
+  island_comm.iallreduce<int>(&local_data_size, &global_data_size, 1, mpicpp::op::sum());
+
+  // Create a dataset in the specified group
+  H5::DataSpace memspace;
+  H5::DataSpace filespace;
+  if constexpr (COLS == 3)
+  {
+    std::array<hsize_t, 2> space_mem = {global_data_size / COLS, COLS};
+    std::array<hsize_t, 2> space_file = {local_data_size / COLS, COLS};
+    filespace = H5::DataSpace(space_file.size(), space_file.data());
+  }
+  else if constexpr (COLS == 1)
+  {
+    std::array<hsize_t, 1> space_mem = {global_data_size};
+    std::array<hsize_t, 2> space_file = {local_data_size};
+    memspace = H5::DataSpace(space_mem.size(), space_mem.data());
+    filespace = H5::DataSpace(space_file.size(), space_file.data());
+  }
+
+  int start_index = 0;
+  int numpart_local = data_chunk.size() / COLS;
+  MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if (island_comm.rank() == 0)
+    start_index = 0;
+
+  H5::DataSet dataset_handle = group.createDataSet(datasetname, H5::PredType::NATIVE_DOUBLE, memspace);
+  // Write the data to the dataset
+
+  if constexpr (COLS == 3)
+  {
+    std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
+    std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
+    std::array<hsize_t, 2> stride{1, 1};
+    std::array<hsize_t, 2> blocks{1, 1};
+    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+  }
+  else if (COLS == 1)
+  {
+    std::array<hsize_t, 1> count{static_cast<hsize_t>(numpart_local)};
+    std::array<hsize_t, 1> start{static_cast<hsize_t>(start_index)};
+    std::array<hsize_t, 1> stride{1};
+    std::array<hsize_t, 1> blocks{1};
+    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+  }
+
+  auto transfer_prop = create_mpi_xfer();
+  dataset_handle.write(data_chunk.data(), H5::PredType::NATIVE_DOUBLE, memspace, memspace, transfer_prop);
 }

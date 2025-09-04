@@ -20,12 +20,11 @@ try
   auto w_rank = world_comm.rank();
   auto w_size = world_comm.size();
 
-
   auto outfiles_dir = infiles_dir / "out";
-  // if (w_rank == 0)
-  // {
-  // }
-  fs::create_directories(outfiles_dir);
+  if (w_rank == 0)
+  {
+    fs::create_directories(outfiles_dir);
+  }
 
   if (w_size < numfiles)
   {
@@ -37,50 +36,43 @@ try
   auto i_rank = islan_comm.rank();
   auto i_size = islan_comm.size();
 
+  if (i_rank == 0)
+    fmt::print("ranks per island: {}\n", i_size);
+
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
   // fmt::print("numfiles {} | {}\n",numfiles, ifname);
 
-
-  std::vector<double> total_coordinates;
-
-  debug_print_info(w_rank, w_size, i_rank, i_size, ifname);
-
-  if (i_rank == 0)
-  {
-    total_coordinates = read_1proc_perisland<double>(ifname, "Coordinates");
-  }
-
-
-  auto local_data = distribute_data<double, 3>(total_coordinates, islan_comm);
-
-  #if 0
+  std::vector<double> total_coordinates = read_1proc_perisland<double>(ifname, "Coordinates", islan_comm);
   
 
-    auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
-    auto facc = create_mpi_fapl(islan_comm);
-    H5::H5File testFile(ofname, H5F_ACC_TRUNC, facc);
-    std::array<hsize_t, 2> dims{static_cast<hsize_t>(total_coordinates.size()), 3};
-    H5::DataSpace filespace(2, dims.data(), NULL);
-    auto dataset_handle = testFile.createDataSet("Coordinates", H5::PredType::NATIVE_DOUBLE, filespace);
-    int start_index = 0;
-    int numpart_local = local_data.size();
-    MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (i_rank == 0)
-      start_index = 0;
+  auto local_data = distribute_data<3>(total_coordinates, islan_comm);
 
-    std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
-    std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
-    std::array<hsize_t, 2> stride{1, 1};
-    std::array<hsize_t, 2> blocks{1, 1};
-    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
-    std::vector<hsize_t> tds{total_coordinates.size(), 3};
-    auto memspace = H5::DataSpace(tds.size(), tds.data(), NULL);
+  auto root_file_handle = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
+  auto PartType1 = root_file_handle.createGroup("PartType1");
+  mpi_filldata<3>(PartType1, "Coordinates", local_data, islan_comm);
 
-    auto prop = create_mpi_xfer();
+#if 0
+  std::array<hsize_t, 2> dims{static_cast<hsize_t>(total_coordinates.size()), 3};
+  H5::DataSpace filespace(2, dims.data(), NULL);
+  auto dataset_handle = testFile.createDataSet("Coordinates", H5::PredType::NATIVE_DOUBLE, filespace);
+  int start_index = 0;
+  int numpart_local = local_data.size();
+  MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if (i_rank == 0)
+    start_index = 0;
 
-    dataset_handle.write(local_data.data(), H5::PredType::NATIVE_DOUBLE, memspace, filespace, prop);
-  #endif
+  std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
+  std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
+  std::array<hsize_t, 2> stride{1, 1};
+  std::array<hsize_t, 2> blocks{1, 1};
+  filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+  std::vector<hsize_t> tds{total_coordinates.size(), 3};
+  auto memspace = H5::DataSpace(tds.size(), tds.data(), NULL);
 
+  auto prop = create_mpi_xfer();
+
+  dataset_handle.write(local_data.data(), H5::PredType::NATIVE_DOUBLE, memspace, filespace, prop);
+#endif
   return EXIT_SUCCESS;
 }
 catch (...)
