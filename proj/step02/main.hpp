@@ -168,21 +168,21 @@ std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::strin
   if (island_comm.rank() == 0)
   {
     H5::H5File F_root(ifname, H5F_ACC_RDONLY);
-    auto G_header = F_root.openGroup("Header");
-    auto A_numpart_thisfile = G_header.openAttribute("NumPart_ThisFile");
-    auto A_numpart_total = G_header.openAttribute("NumPart_Total");
+    // auto G_header = F_root.openGroup("Header");
+    // auto A_numpart_thisfile = G_header.openAttribute("NumPart_ThisFile");
+    // auto A_numpart_total = G_header.openAttribute("NumPart_Total");
+    // auto ldata_numparts = readAttribute<int>(A_numpart_thisfile);
+    // auto gdata_numparts = readAttribute<int>(A_numpart_total);
+    // auto l_numparts = ldata_numparts[PARTIDX];
+    // auto g_numparts = gdata_numparts[PARTIDX];
     auto G_parttype = F_root.openGroup("PartType1");
-    auto ldata_numparts = readAttribute<int>(A_numpart_thisfile);
-    auto gdata_numparts = readAttribute<int>(A_numpart_total);
-    auto l_numparts = ldata_numparts[PARTIDX];
-    auto g_numparts = gdata_numparts[PARTIDX];
     auto D_coordinate = G_parttype.openDataSet(datasetname);
     data = readdataSet<VT>(D_coordinate);
   }
   return data;
 }
 
-template <size_t COLS, typename VT = double>
+template <size_t COLS, typename VT>
 std::vector<VT> distribute_data(std::vector<VT> &g_data, const mpicpp::comm &islan_comm)
 {
 
@@ -225,7 +225,20 @@ H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfile
   return {ofname, H5F_ACC_TRUNC, facc};
 }
 
-template <size_t COLS, typename VT = double>
+template <typename VT>
+H5::PredType get_pred_type()
+{
+  if (std::is_same_v<VT, double>)
+    return H5::PredType::IEEE_F64LE;
+
+  else if (std::is_same_v<VT, float>)
+    return H5::PredType::IEEE_F32LE;
+
+  if (std::is_same_v<VT, std::uint64_t>)
+    return H5::PredType::STD_U64LE;
+}
+
+template <size_t COLS, typename VT>
 void mpi_filldata(H5::Group &group,
                   const std::string &datasetname,
                   const std::vector<VT> &data_chunk,
@@ -249,11 +262,13 @@ void mpi_filldata(H5::Group &group,
     global_dims = {global_rows, COLS};
   }
 
-    H5::DataSpace file_space(global_dims.size(), global_dims.data());
+  H5::DataSpace file_space(global_dims.size(), global_dims.data());
 
   // Create dataset with *global* dimensions
-  H5::DataSet dataset_handle =
-      group.createDataSet(datasetname, H5::PredType::NATIVE_DOUBLE, file_space);
+  auto h5dt = get_pred_type<VT>();
+
+      H5::DataSet dataset_handle =
+          group.createDataSet(datasetname, h5dt, file_space);
 
   // Define memory space (local buffer shape)
   std::vector<hsize_t> mem_dims;
@@ -290,6 +305,6 @@ void mpi_filldata(H5::Group &group,
   // Collective parallel write
   auto transfer_prop = create_mpi_xfer();
   dataset_handle.write(data_chunk.data(),
-                       H5::PredType::NATIVE_DOUBLE,
+                       h5dt,
                        mem_space, file_space, transfer_prop);
 }

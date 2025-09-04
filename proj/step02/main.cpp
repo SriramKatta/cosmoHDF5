@@ -40,39 +40,37 @@ try
     fmt::print("ranks per island: {}\n", i_size);
 
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
-  // fmt::print("numfiles {} | {}\n",numfiles, ifname);
-
-  std::vector<double> total_coordinates = read_1proc_perisland<double>(ifname, "Coordinates", islan_comm);
-  
-
-  auto local_data = distribute_data<3>(total_coordinates, islan_comm);
 
   auto root_file_handle = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
   auto PartType1 = root_file_handle.createGroup("PartType1");
-  mpi_filldata<3>(PartType1, "Coordinates", local_data, islan_comm);
 
-#if 0
-  std::array<hsize_t, 2> dims{static_cast<hsize_t>(total_coordinates.size()), 3};
-  H5::DataSpace filespace(2, dims.data(), NULL);
-  auto dataset_handle = testFile.createDataSet("Coordinates", H5::PredType::NATIVE_DOUBLE, filespace);
-  int start_index = 0;
-  int numpart_local = local_data.size();
-  MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  if (i_rank == 0)
-    start_index = 0;
+  auto total_Coordinates = read_1proc_perisland<double>(ifname, "Coordinates", islan_comm);
+  auto total_Velocities = read_1proc_perisland<float>(ifname, "Velocities", islan_comm);
+  auto total_ParticleIDs = read_1proc_perisland<std::uint64_t>(ifname, "ParticleIDs", islan_comm);
+  auto total_Potential = read_1proc_perisland<float>(ifname, "Potential", islan_comm);
+  auto total_SubfindDMDensity = read_1proc_perisland<float>(ifname, "SubfindDMDensity", islan_comm);
+  auto total_SubfindDensity = read_1proc_perisland<float>(ifname, "SubfindDensity", islan_comm);
+  auto total_SubfindHsml = read_1proc_perisland<float>(ifname, "SubfindHsml", islan_comm);
+  auto total_SubfindVelDisp = read_1proc_perisland<float>(ifname, "SubfindVelDisp", islan_comm);
 
-  std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
-  std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
-  std::array<hsize_t, 2> stride{1, 1};
-  std::array<hsize_t, 2> blocks{1, 1};
-  filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
-  std::vector<hsize_t> tds{total_coordinates.size(), 3};
-  auto memspace = H5::DataSpace(tds.size(), tds.data(), NULL);
+  auto local_Coordinates = distribute_data<3>(total_Coordinates, islan_comm);
+  auto local_Velocities = distribute_data<3>(total_Velocities, islan_comm);
+  auto local_ParticleIDs = distribute_data<1>(total_ParticleIDs, islan_comm);
+  auto local_Potential = distribute_data<1>(total_Potential, islan_comm);
+  auto local_SubfindDMDensity = distribute_data<1>(total_SubfindDMDensity, islan_comm);
+  auto local_SubfindDensity = distribute_data<1>(total_SubfindDensity, islan_comm);
+  auto local_SubfindHsml = distribute_data<1>(total_SubfindHsml, islan_comm);
+  auto local_SubfindVelDisp = distribute_data<1>(total_SubfindVelDisp, islan_comm);
 
-  auto prop = create_mpi_xfer();
+  mpi_filldata<3>(PartType1, "Coordinates", local_Coordinates, islan_comm);
+  mpi_filldata<3>(PartType1, "Velocities", local_Velocities, islan_comm);
+  mpi_filldata<1>(PartType1, "ParticleIDs", local_ParticleIDs, islan_comm);
+  mpi_filldata<1>(PartType1, "Potential", local_Potential, islan_comm);
+  mpi_filldata<1>(PartType1, "SubfindDMDensity", local_SubfindDMDensity, islan_comm);
+  mpi_filldata<1>(PartType1, "SubfindDensity", local_SubfindDensity, islan_comm);
+  mpi_filldata<1>(PartType1, "SubfindHsml", local_SubfindHsml, islan_comm);
+  mpi_filldata<1>(PartType1, "SubfindVelDisp", local_SubfindVelDisp, islan_comm);
 
-  dataset_handle.write(local_data.data(), H5::PredType::NATIVE_DOUBLE, memspace, filespace, prop);
-#endif
   return EXIT_SUCCESS;
 }
 catch (...)
@@ -94,3 +92,12 @@ catch (...)
 
 // auto filename = fullfilename.stem().stem(); // since format is in <fname>.<rank>.hdf5
 // auto outfilename
+
+// /PartType1/Coordinates   Dataset {23566292, 3}
+// /PartType1/Velocities    Dataset {23566292, 3}
+// /PartType1/ParticleIDs   Dataset {23566292}
+// /PartType1/Potential     Dataset {23566292}
+// /PartType1/SubfindDMDensity Dataset {23566292}
+// /PartType1/SubfindDensity Dataset {23566292}
+// /PartType1/SubfindHsml   Dataset {23566292}
+// /PartType1/SubfindVelDisp Dataset {23566292}
