@@ -226,55 +226,70 @@ H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfile
 }
 
 template <size_t COLS, typename VT = double>
-void mpi_filldata(H5::Group &group, const std::string &datasetname, const std::vector<VT> &data_chunk, mpicpp::comm &island_comm)
+void mpi_filldata(H5::Group &group,
+                  const std::string &datasetname,
+                  const std::vector<VT> &data_chunk,
+                  mpicpp::comm &island_comm)
 {
-  const int local_data_size{static_cast<int>(data_chunk.size()) / COLS};
-  int global_data_size{0};
-  island_comm.iallreduce<int>(&local_data_size, &global_data_size, 1, mpicpp::op::sum());
+  // Local number of rows
+  const hsize_t local_rows = data_chunk.size() / COLS;
 
-  // Create a dataset in the specified group
-  H5::DataSpace memspace;
-  H5::DataSpace filespace;
-  if constexpr (COLS == 3)
+  // Global number of rows
+  hsize_t global_rows = 0;
+  island_comm.iallreduce(&local_rows, &global_rows, 1, mpicpp::op::sum());
+
+  // Define global dataset shape
+  std::vector<hsize_t> global_dims;
+  if (COLS == 1)
   {
-    std::array<hsize_t, 2> space_mem = {global_data_size / COLS, COLS};
-    std::array<hsize_t, 2> space_file = {local_data_size / COLS, COLS};
-    filespace = H5::DataSpace(space_file.size(), space_file.data());
+    global_dims = {global_rows};
   }
-  else if constexpr (COLS == 1)
+  else
   {
-    std::array<hsize_t, 1> space_mem = {global_data_size};
-    std::array<hsize_t, 2> space_file = {local_data_size};
-    memspace = H5::DataSpace(space_mem.size(), space_mem.data());
-    filespace = H5::DataSpace(space_file.size(), space_file.data());
+    global_dims = {global_rows, COLS};
   }
 
-  int start_index = 0;
-  int numpart_local = data_chunk.size() / COLS;
-  MPI_Exscan(&numpart_local, &start_index, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    H5::DataSpace file_space(global_dims.size(), global_dims.data());
+
+  // Create dataset with *global* dimensions
+  H5::DataSet dataset_handle =
+      group.createDataSet(datasetname, H5::PredType::NATIVE_DOUBLE, file_space);
+
+  // Define memory space (local buffer shape)
+  std::vector<hsize_t> mem_dims;
+  if (COLS == 1)
+  {
+    mem_dims = {local_rows};
+  }
+  else
+  {
+    mem_dims = {local_rows, COLS};
+  }
+  H5::DataSpace mem_space(mem_dims.size(), mem_dims.data());
+
+  // Compute starting row offset for each rank
+  hsize_t start_row = 0;
+  MPI_Exscan(&local_rows, &start_row, 1, MPI_LONG_LONG, MPI_SUM, island_comm.get());
   if (island_comm.rank() == 0)
-    start_index = 0;
+    start_row = 0;
 
-  H5::DataSet dataset_handle = group.createDataSet(datasetname, H5::PredType::NATIVE_DOUBLE, memspace);
-  // Write the data to the dataset
-
-  if constexpr (COLS == 3)
+  // Select hyperslab in global file space
+  if constexpr (COLS == 1)
   {
-    std::array<hsize_t, 2> count{static_cast<hsize_t>(numpart_local), 3};
-    std::array<hsize_t, 2> start{static_cast<hsize_t>(start_index), 0};
-    std::array<hsize_t, 2> stride{1, 1};
-    std::array<hsize_t, 2> blocks{1, 1};
-    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+    std::array<hsize_t, 1> start{start_row};
+    std::array<hsize_t, 1> count{local_rows};
+    file_space.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
   }
-  else if (COLS == 1)
+  else
   {
-    std::array<hsize_t, 1> count{static_cast<hsize_t>(numpart_local)};
-    std::array<hsize_t, 1> start{static_cast<hsize_t>(start_index)};
-    std::array<hsize_t, 1> stride{1};
-    std::array<hsize_t, 1> blocks{1};
-    filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), blocks.data());
+    std::array<hsize_t, 2> start{start_row, 0};
+    std::array<hsize_t, 2> count{local_rows, COLS};
+    file_space.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
   }
 
+  // Collective parallel write
   auto transfer_prop = create_mpi_xfer();
-  dataset_handle.write(data_chunk.data(), H5::PredType::NATIVE_DOUBLE, memspace, memspace, transfer_prop);
+  dataset_handle.write(data_chunk.data(),
+                       H5::PredType::NATIVE_DOUBLE,
+                       mem_space, file_space, transfer_prop);
 }
