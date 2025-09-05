@@ -17,6 +17,12 @@ constexpr size_t PARTIDX = 1; // since we consider only parttype 1 for now
 
 #define DEBUG_PRINT fmt::print("reached {}\n", __LINE__)
 
+#define DURATION_MEASURE(duration, local_comm, world_comm, codeblock) \
+  auto duration##start = MPI_Wtime();                                 \
+  codeblock;                                                          \
+  auto duration = MPI_Wtime() - duration##start;                      \
+  local_comm.iallreduce(&duration, 1, mpicpp::op::max());
+
 int get_island_colour(int w_rank, int w_size, int numfiles)
 {
   int base_size = w_size / numfiles; // minimum island size
@@ -267,8 +273,8 @@ void mpi_filldata(H5::Group &group,
   // Create dataset with *global* dimensions
   auto h5dt = get_pred_type<VT>();
 
-      H5::DataSet dataset_handle =
-          group.createDataSet(datasetname, h5dt, file_space);
+  H5::DataSet dataset_handle =
+      group.createDataSet(datasetname, h5dt, file_space);
 
   // Define memory space (local buffer shape)
   std::vector<hsize_t> mem_dims;

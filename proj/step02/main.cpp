@@ -36,46 +36,68 @@ try
   auto i_rank = islan_comm.rank();
   auto i_size = islan_comm.size();
 
-  if (i_rank == 0)
-    fmt::print("ranks per island: {}\n", i_size);
+  // if (i_rank == 0)
+  //   fmt::print("ranks per island: {}\n", i_size);
 
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
 
   auto root_file_handle = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
   auto PartType1 = root_file_handle.createGroup("PartType1");
 
-  auto total_Coordinates = read_1proc_perisland<double>(ifname, "Coordinates", islan_comm);
-  auto total_Velocities = read_1proc_perisland<float>(ifname, "Velocities", islan_comm);
-  auto total_ParticleIDs = read_1proc_perisland<std::uint64_t>(ifname, "ParticleIDs", islan_comm);
-  auto total_Potential = read_1proc_perisland<float>(ifname, "Potential", islan_comm);
-  auto total_SubfindDMDensity = read_1proc_perisland<float>(ifname, "SubfindDMDensity", islan_comm);
-  auto total_SubfindDensity = read_1proc_perisland<float>(ifname, "SubfindDensity", islan_comm);
-  auto total_SubfindHsml = read_1proc_perisland<float>(ifname, "SubfindHsml", islan_comm);
-  auto total_SubfindVelDisp = read_1proc_perisland<float>(ifname, "SubfindVelDisp", islan_comm);
+  DURATION_MEASURE(read1perisland, islan_comm, world_comm,
+                   auto total_Coordinates = read_1proc_perisland<double>(ifname, "Coordinates", islan_comm);
+                   auto total_Velocities = read_1proc_perisland<float>(ifname, "Velocities", islan_comm);
+                   auto total_ParticleIDs = read_1proc_perisland<std::uint64_t>(ifname, "ParticleIDs", islan_comm);
+                   auto total_Potential = read_1proc_perisland<float>(ifname, "Potential", islan_comm);
+                   auto total_SubfindDMDensity = read_1proc_perisland<float>(ifname, "SubfindDMDensity", islan_comm);
+                   auto total_SubfindDensity = read_1proc_perisland<float>(ifname, "SubfindDensity", islan_comm);
+                   auto total_SubfindHsml = read_1proc_perisland<float>(ifname, "SubfindHsml", islan_comm);
+                   auto total_SubfindVelDisp = read_1proc_perisland<float>(ifname, "SubfindVelDisp", islan_comm););
 
-  auto local_Coordinates = distribute_data<3>(total_Coordinates, islan_comm);
-  auto local_Velocities = distribute_data<3>(total_Velocities, islan_comm);
-  auto local_ParticleIDs = distribute_data<1>(total_ParticleIDs, islan_comm);
-  auto local_Potential = distribute_data<1>(total_Potential, islan_comm);
-  auto local_SubfindDMDensity = distribute_data<1>(total_SubfindDMDensity, islan_comm);
-  auto local_SubfindDensity = distribute_data<1>(total_SubfindDensity, islan_comm);
-  auto local_SubfindHsml = distribute_data<1>(total_SubfindHsml, islan_comm);
-  auto local_SubfindVelDisp = distribute_data<1>(total_SubfindVelDisp, islan_comm);
+  DURATION_MEASURE(distributedatadur, islan_comm, world_comm,
+                   auto local_Coordinates = distribute_data<3>(total_Coordinates, islan_comm);
+                   auto local_Velocities = distribute_data<3>(total_Velocities, islan_comm);
+                   auto local_ParticleIDs = distribute_data<1>(total_ParticleIDs, islan_comm);
+                   auto local_Potential = distribute_data<1>(total_Potential, islan_comm);
+                   auto local_SubfindDMDensity = distribute_data<1>(total_SubfindDMDensity, islan_comm);
+                   auto local_SubfindDensity = distribute_data<1>(total_SubfindDensity, islan_comm);
+                   auto local_SubfindHsml = distribute_data<1>(total_SubfindHsml, islan_comm);
+                   auto local_SubfindVelDisp = distribute_data<1>(total_SubfindVelDisp, islan_comm););
 
-  mpi_filldata<3>(PartType1, "Coordinates", local_Coordinates, islan_comm);
-  mpi_filldata<3>(PartType1, "Velocities", local_Velocities, islan_comm);
-  mpi_filldata<1>(PartType1, "ParticleIDs", local_ParticleIDs, islan_comm);
-  mpi_filldata<1>(PartType1, "Potential", local_Potential, islan_comm);
-  mpi_filldata<1>(PartType1, "SubfindDMDensity", local_SubfindDMDensity, islan_comm);
-  mpi_filldata<1>(PartType1, "SubfindDensity", local_SubfindDensity, islan_comm);
-  mpi_filldata<1>(PartType1, "SubfindHsml", local_SubfindHsml, islan_comm);
-  mpi_filldata<1>(PartType1, "SubfindVelDisp", local_SubfindVelDisp, islan_comm);
+  DURATION_MEASURE(writedatapardur, islan_comm, world_comm,
+                   mpi_filldata<3>(PartType1, "Coordinates", local_Coordinates, islan_comm);
+                   mpi_filldata<3>(PartType1, "Velocities", local_Velocities, islan_comm);
+                   mpi_filldata<1>(PartType1, "ParticleIDs", local_ParticleIDs, islan_comm);
+                   mpi_filldata<1>(PartType1, "Potential", local_Potential, islan_comm);
+                   mpi_filldata<1>(PartType1, "SubfindDMDensity", local_SubfindDMDensity, islan_comm);
+                   mpi_filldata<1>(PartType1, "SubfindDensity", local_SubfindDensity, islan_comm);
+                   mpi_filldata<1>(PartType1, "SubfindHsml", local_SubfindHsml, islan_comm);
+                   mpi_filldata<1>(PartType1, "SubfindVelDisp", local_SubfindVelDisp, islan_comm);)
+  // if (i_rank == 0)
+  // {
+  //   fmt::print("{:32s} : {:4.3f} s\n", "Time to read data on 1 rank", read1perisland);
+
+  //   fmt::print("{:32s} : {:4.3f} s\n", "Time to distribute data", distributedatadur);
+
+  //   fmt::print("{:32s} : {:4.3f} s\n", "Time to write data in parallel", writedatapardur);
+  // }
+
+  world_comm.iallreduce(&read1perisland, 1, mpicpp::op::max());
+  world_comm.iallreduce(&distributedatadur, 1, mpicpp::op::max());
+  world_comm.iallreduce(&writedatapardur, 1, mpicpp::op::max());
+  if (w_rank == 0)
+  {
+    fmt::print("{:32s} : {:4.3f} s\n", "Time to read data on 1 rank", read1perisland);
+
+    fmt::print("{:32s} : {:4.3f} s\n", "Time to distribute data", distributedatadur);
+
+    fmt::print("{:32s} : {:4.3f} s\n", "Time to write data in parallel", writedatapardur);
+  }
 
   return EXIT_SUCCESS;
 }
 catch (...)
 {
-  fmt::print(stderr, "exception caught\n");
   return exception_handler();
 }
 
