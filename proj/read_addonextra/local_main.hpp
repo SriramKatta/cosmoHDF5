@@ -1,13 +1,8 @@
 #pragma once
 
-
-#include <string>
 #include <H5Cpp.h>
 #include "TNG_data.hpp"
 #include "attribute_helper.hpp"
-
-
-
 
 headerfields read_header(const H5::H5File &file)
 {

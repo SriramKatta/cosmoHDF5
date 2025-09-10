@@ -19,7 +19,6 @@
 
 constexpr size_t PARTIDX = 1; // since we consider only parttype 1 for now
 
-
 std::filesystem::path parser(int &argc, char **&argv)
 {
   namespace fs = std::filesystem;
@@ -68,7 +67,6 @@ std::vector<T> readdataSet(const H5::DataSet &D)
   return data;
 }
 
-
 template <typename VT>
 std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::string &datasetname, const mpicpp::comm &island_comm)
 {
@@ -83,15 +81,12 @@ std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::strin
   return data;
 }
 
-
 H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour)
 {
   auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
   auto facc = create_mpi_fapl(island_comm);
   return {ofname, H5F_ACC_TRUNC, facc};
 }
-
-
 
 template <size_t COLS, typename VT>
 void mpi_filldata(H5::Group &group,
@@ -165,5 +160,3 @@ void mpi_filldata(H5::Group &group,
 
   // write_dataset_attribute<VT>(dataset_handle);
 }
-
-
