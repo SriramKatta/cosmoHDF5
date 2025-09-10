@@ -15,13 +15,13 @@ files=("$DIR1"/snap_099*)
 # List of datasets to compare
 DATASETS=(
     "/PartType1/Coordinates"
+    "/PartType1/Velocities"
     "/PartType1/ParticleIDs"
     "/PartType1/Potential"
     "/PartType1/SubfindDMDensity"
     "/PartType1/SubfindDensity"
     "/PartType1/SubfindHsml"
     "/PartType1/SubfindVelDisp"
-    "/PartType1/Velocities"
 )
 
 for f1 in "${files[@]}"; do

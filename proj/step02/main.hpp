@@ -234,14 +234,20 @@ H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfile
 template <typename VT>
 H5::PredType get_pred_type()
 {
-  if (std::is_same_v<VT, double>)
+  if constexpr (std::is_same_v<VT, double>)
     return H5::PredType::IEEE_F64LE;
-
-  else if (std::is_same_v<VT, float>)
+  else if constexpr (std::is_same_v<VT, float>)
     return H5::PredType::IEEE_F32LE;
-
-  if (std::is_same_v<VT, std::uint64_t>)
+  else if constexpr (std::is_same_v<VT, std::uint64_t>)
     return H5::PredType::STD_U64LE;
+  else if constexpr (std::is_same_v<VT, std::uint32_t>)
+    return H5::PredType::STD_U32LE;
+  else if constexpr (std::is_same_v<VT, std::int64_t>)
+    return H5::PredType::STD_I64LE;
+  else if constexpr (std::is_same_v<VT, std::int32_t>)
+    return H5::PredType::STD_I32LE;
+  else
+    static_assert(!sizeof(VT), "Unsupported type for get_pred_type");
 }
 
 template <size_t COLS, typename VT>
@@ -313,4 +319,47 @@ void mpi_filldata(H5::Group &group,
   dataset_handle.write(data_chunk.data(),
                        h5dt,
                        mem_space, file_space, transfer_prop);
+
+  // write_dataset_attribute<VT>(dataset_handle);
 }
+
+void write_vector_attribute(const H5::Group &group, const std::string &attr_name, const std::vector<int> &data)
+{
+  hsize_t dims = data.size();
+  H5::DataSpace attr_space(1, &dims);
+  H5::Attribute attribute = group.createAttribute(attr_name, H5::PredType::STD_I32LE, attr_space);
+  attribute.write(H5::PredType::STD_I32LE, data.data());
+}
+
+// Generic template version for different data types
+// template <typename T>
+// void write_vector_attribute(const H5::Group &group, const std::string &attr_name, const std::vector<T> &data)
+// {
+//   // Check if attribute already exists and delete it
+//   if (H5Aexists(group.getId(), attr_name.c_str()))
+//   {
+//     group.removeAttr(attr_name);
+//   }
+
+//   hsize_t dims = data.size();
+//   H5::DataSpace attr_space(1, &dims);
+
+//   // Get appropriate HDF5 data type
+//   H5::PredType h5_type = get_pred_type<T>();
+
+//   H5::Attribute attribute = group.createAttribute(attr_name, h5_type, attr_space);
+//   attribute.write(h5_type, data.data());
+// }
+
+// void write_header(const H5::Group &header_handle)
+// {
+//   write_vector_attribute(header_handle, "NumPart_ThisFile", {});
+//   write_vector_attribute(header_handle, "NumPart_Total", {});
+//   write_vector_attribute(header_handle, "MassTable", {});
+//   write_scalar_attribute(header_handle, "Time", {});
+//   write_scalar_attribute(header_handle, "Redshift", {});
+//   write_scalar_attribute(header_handle, "BoxSize", {});
+//   write_scalar_attribute(header_handle, "NumFilesPerSnapshot", {});
+//   write_string_attribute(header_handle, "Git_commit", {});
+//   write_string_attribute(header_handle, "Git_date", {});
+// }
