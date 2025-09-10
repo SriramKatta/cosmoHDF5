@@ -18,4 +18,6 @@ include(cmake/mpicpp.cmake)
 include(cmake/HDF5.cmake)
 include(cmake/argparse.cmake)
 
+include_directories(${CMAKE_SOURCE_DIR}/header)
+
 add_subdirectory(proj)

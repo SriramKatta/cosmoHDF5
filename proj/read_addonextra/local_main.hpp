@@ -1,96 +1,13 @@
 #pragma once
 
-#include <array>
-#include <cstdint>
+
 #include <string>
 #include <H5Cpp.h>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include "TNG_data.hpp"
+#include "attribute_helper.hpp"
 
-struct headerfields
-{
-  double BoxSize;
-  std::int32_t Composition_vector_length;
-  std::int32_t Flag_Cooling;
-  std::int32_t Flag_DoublePrecision;
-  std::int32_t Flag_Feedback;
-  std::int32_t Flag_Metals;
-  std::int32_t Flag_Sfr;
-  std::int32_t Flag_StellarAge;
-  std::int32_t NumFilesPerSnapshot;
-  std::array<std::int32_t, 6> NumPart_ThisFile;
-  std::array<std::uint32_t, 6> NumPart_Total;
-  std::array<std::uint32_t, 6> NumPart_Total_HighWord;
-  double HubbleParam;
-  double Omega0;
-  double OmegaBaryon;
-  double OmegaLambda;
-  double Redshift;
-  double Time;
-  double UnitLength_in_cm;
-  double UnitMass_in_g;
-  double UnitVelocity_in_cm_per_s;
-  std::array<double, 6> MassTable;
-  std::string Git_commit;
-  std::string Git_date;
 
-#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
 
-  void print() const
-  {
-    PRINT_VAR(BoxSize);
-    PRINT_VAR(Composition_vector_length);
-    PRINT_VAR(Flag_Cooling);
-    PRINT_VAR(Flag_DoublePrecision);
-    PRINT_VAR(Flag_Feedback);
-    PRINT_VAR(Flag_Metals);
-    PRINT_VAR(Flag_Sfr);
-    PRINT_VAR(Flag_StellarAge);
-    PRINT_VAR(Git_commit);
-    PRINT_VAR(Git_date);
-    PRINT_VAR(HubbleParam);
-    PRINT_VAR(MassTable);
-    PRINT_VAR(NumFilesPerSnapshot);
-    PRINT_VAR(NumPart_ThisFile);
-    PRINT_VAR(NumPart_Total);
-    PRINT_VAR(NumPart_Total_HighWord);
-    PRINT_VAR(Omega0);
-    PRINT_VAR(OmegaBaryon);
-    PRINT_VAR(OmegaLambda);
-    PRINT_VAR(Redshift);
-    PRINT_VAR(Time);
-    PRINT_VAR(UnitLength_in_cm);
-    PRINT_VAR(UnitMass_in_g);
-    PRINT_VAR(UnitVelocity_in_cm_per_s);
-  }
-};
-
-template <typename VT>
-VT read_scalar_attribute(const H5::H5Object &obj, const std::string &attr_name)
-{
-  VT value;
-  H5::Attribute attr = obj.openAttribute(attr_name);
-  attr.read(attr.getDataType(), &value);
-  return value;
-}
-
-template <typename VT>
-std::array<VT, 6> read_array_attribute(const H5::H5Object &obj, const std::string &attr_name)
-{
-  std::array<VT, 6> values;
-  H5::Attribute attr = obj.openAttribute(attr_name);
-  attr.read(attr.getDataType(), values.data());
-  return values;
-}
-
-std::string read_string_attribute(const H5::H5Object &obj, const std::string &attr_name)
-{
-  H5::Attribute attr = obj.openAttribute(attr_name);
-  H5::StrType str_type = attr.getStrType();
-  std::string value;
-  attr.read(str_type, value);
-  return value;
-}
 
 headerfields read_header(const H5::H5File &file)
 {
@@ -122,65 +39,6 @@ headerfields read_header(const H5::H5File &file)
   hf.UnitVelocity_in_cm_per_s = read_scalar_attribute<double>(header, "UnitVelocity_in_cm_per_s");
 
   return hf;
-}
-
-// Write a scalar attribute
-template <typename VT>
-void write_scalar_attribute(const H5::Group &obj, const std::string &attr_name, const VT &value)
-{
-  H5::DataSpace scalar_space(H5S_SCALAR);
-  H5::Attribute attr;
-
-  auto dtype = get_pred_type<VT>();
-  // If attribute already exists, open it. Otherwise, create it.
-  if (obj.attrExists(attr_name))
-  {
-    attr = obj.openAttribute(attr_name);
-  }
-  else
-  {
-    attr = obj.createAttribute(attr_name, dtype, scalar_space);
-  }
-  attr.write(dtype, &value);
-}
-
-// Write a fixed-size array attribute (size 6)
-template <typename VT>
-void write_array_attribute(const H5::Group &obj, const std::string &attr_name, const std::array<VT, 6> &values)
-{
-  hsize_t dims[1] = {6};
-  H5::DataSpace dataspace(1, dims);
-  H5::Attribute attr;
-  auto dtype = get_pred_type<VT>();
-
-  if (H5Aexists(obj.getId(), attr_name.c_str()))
-  {
-    attr = obj.openAttribute(attr_name);
-  }
-  else
-  {
-    attr = obj.createAttribute(attr_name, dtype, dataspace); // default
-  }
-
-  attr.write(dtype, values.data());
-}
-
-// Write a string attribute
-void write_string_attribute(const H5::Group &obj, const std::string &attr_name, const std::string &value)
-{
-  H5::StrType str_type(H5::PredType::C_S1, value.size());
-  H5::DataSpace scalar_space(H5S_SCALAR);
-  H5::Attribute attr;
-  if (obj.attrExists(attr_name))
-  {
-    attr = obj.openAttribute(attr_name);
-  }
-
-  else
-  {
-    attr = obj.createAttribute(attr_name, str_type, scalar_space);
-  }
-  attr.write(str_type, value);
 }
 
 void write_header(const H5::Group &header_handle, const headerfields &hf, const mpicpp::comm &comm)
