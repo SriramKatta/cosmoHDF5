@@ -4,6 +4,10 @@
 #include <cstdint>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <string>
+#include <vector>
+
+#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
 
 struct headerfields
 {
@@ -32,8 +36,6 @@ struct headerfields
   std::string Git_commit;
   std::string Git_date;
 
-#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
-
   void print() const
   {
     PRINT_VAR(BoxSize);
@@ -60,5 +62,43 @@ struct headerfields
     PRINT_VAR(UnitLength_in_cm);
     PRINT_VAR(UnitMass_in_g);
     PRINT_VAR(UnitVelocity_in_cm_per_s);
+  }
+};
+
+struct attributes
+{
+  double a_scaling{0.0};
+  double h_scaling{0.0};
+  double length_scaling{0.0};
+  double mass_scaling{0.0};
+  double to_cgs{0.0};
+  double velocity_scaling{0.0};
+  void print() const
+  {
+    PRINT_VAR(a_scaling);
+    PRINT_VAR(h_scaling);
+    PRINT_VAR(length_scaling);
+    PRINT_VAR(mass_scaling);
+    PRINT_VAR(to_cgs);
+    PRINT_VAR(velocity_scaling);
+  }
+};
+
+struct dataset
+{
+  std::vector<double> data;
+  void print() const
+  {
+    PRINT_VAR(data.size());
+  }
+};
+
+
+struct dataset_wattr : public attributes, dataset
+{
+  void print() const
+  {
+    attributes::print();
+    dataset::print();
   }
 };
