@@ -3,6 +3,7 @@
 #include <H5Cpp.h>
 #include <type_traits>
 #include <filesystem>
+#include <mpicpp.hpp>
 
 template <typename VT>
 constexpr H5::PredType get_pred_type()

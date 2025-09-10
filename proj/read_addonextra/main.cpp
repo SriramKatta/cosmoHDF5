@@ -4,11 +4,9 @@
 #include <filesystem>
 #include <H5Cpp.h>
 #include "../step02/main.hpp"
-#include "local_main.hpp"
+#include "snap_io.hpp"
 
 namespace fs = std::filesystem;
-
-
 
 int
 main(int argc, char **argv)
