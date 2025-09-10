@@ -232,7 +232,7 @@ H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfile
 }
 
 template <typename VT>
-H5::PredType get_pred_type()
+constexpr H5::PredType get_pred_type()
 {
   if constexpr (std::is_same_v<VT, double>)
     return H5::PredType::IEEE_F64LE;

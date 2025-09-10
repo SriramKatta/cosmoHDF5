@@ -126,39 +126,47 @@ headerfields read_header(const H5::H5File &file)
 
 // Write a scalar attribute
 template <typename VT>
-H5::Attribute make_scalar_attribute(const H5::Group &obj, const std::string &attr_name, const VT &value)
+void write_scalar_attribute(const H5::Group &obj, const std::string &attr_name, const VT &value)
 {
   H5::DataSpace scalar_space(H5S_SCALAR);
+  H5::Attribute attr;
+
+  auto dtype = get_pred_type<VT>();
   // If attribute already exists, open it. Otherwise, create it.
   if (obj.attrExists(attr_name))
   {
-    return obj.openAttribute(attr_name);
+    attr = obj.openAttribute(attr_name);
   }
   else
   {
-    return obj.createAttribute(attr_name, get_pred_type<VT>(), scalar_space);
+    attr = obj.createAttribute(attr_name, dtype, scalar_space);
   }
+  attr.write(dtype, &value);
 }
 
 // Write a fixed-size array attribute (size 6)
 template <typename VT>
-H5::Attribute make_array_attribute(const H5::Group &obj, const std::string &attr_name, const std::array<VT, 6> &values)
+void write_array_attribute(const H5::Group &obj, const std::string &attr_name, const std::array<VT, 6> &values)
 {
   hsize_t dims[1] = {6};
   H5::DataSpace dataspace(1, dims);
+  H5::Attribute attr;
+  auto dtype = get_pred_type<VT>();
 
   if (H5Aexists(obj.getId(), attr_name.c_str()))
   {
-    return obj.openAttribute(attr_name);
+    attr = obj.openAttribute(attr_name);
   }
   else
   {
-    return obj.createAttribute(attr_name, get_pred_type<VT>(), dataspace); // default
+    attr = obj.createAttribute(attr_name, dtype, dataspace); // default
   }
+
+  attr.write(dtype, values.data());
 }
 
 // Write a string attribute
-H5::Attribute make_string_attribute(const H5::Group &obj, const std::string &attr_name, const std::string &value)
+void write_string_attribute(const H5::Group &obj, const std::string &attr_name, const std::string &value)
 {
   H5::StrType str_type(H5::PredType::C_S1, value.size());
   H5::DataSpace scalar_space(H5S_SCALAR);
@@ -172,64 +180,33 @@ H5::Attribute make_string_attribute(const H5::Group &obj, const std::string &att
   {
     attr = obj.createAttribute(attr_name, str_type, scalar_space);
   }
-  return attr;
+  attr.write(str_type, value);
 }
 
 void write_header(const H5::Group &header_handle, const headerfields &hf, const mpicpp::comm &comm)
 {
-  auto BoxSize_attr = make_scalar_attribute(header_handle, "BoxSize", hf.BoxSize);
-  auto Composition_vector_length_attr = make_scalar_attribute(header_handle, "Composition_vector_length", hf.Composition_vector_length);
-  auto Flag_Cooling_attr = make_scalar_attribute(header_handle, "Flag_Cooling", hf.Flag_Cooling);
-  auto Flag_DoublePrecision_attr = make_scalar_attribute(header_handle, "Flag_DoublePrecision", hf.Flag_DoublePrecision);
-  auto Flag_Feedback_attr = make_scalar_attribute(header_handle, "Flag_Feedback", hf.Flag_Feedback);
-  auto Flag_Metals_attr = make_scalar_attribute(header_handle, "Flag_Metals", hf.Flag_Metals);
-  auto Flag_Sfr_attr = make_scalar_attribute(header_handle, "Flag_Sfr", hf.Flag_Sfr);
-  auto Flag_StellarAge_attr = make_scalar_attribute(header_handle, "Flag_StellarAge", hf.Flag_StellarAge);
-  auto Git_commit_attr = make_string_attribute(header_handle, "Git_commit", hf.Git_commit);
-  auto Git_date_attr = make_string_attribute(header_handle, "Git_date", hf.Git_date);
-  auto HubbleParam_attr = make_scalar_attribute(header_handle, "HubbleParam", hf.HubbleParam);
-  auto MassTable_attr = make_array_attribute(header_handle, "MassTable", hf.MassTable);
-  auto NumFilesPerSnapshot_attr = make_scalar_attribute(header_handle, "NumFilesPerSnapshot", hf.NumFilesPerSnapshot);
-  auto NumPart_ThisFile_attr = make_array_attribute(header_handle, "NumPart_ThisFile", hf.NumPart_ThisFile);
-  auto NumPart_Total_attr = make_array_attribute(header_handle, "NumPart_Total", hf.NumPart_Total);
-  auto NumPart_Total_HighWord_attr = make_array_attribute(header_handle, "NumPart_Total_HighWord", hf.NumPart_Total_HighWord);
-  auto Omega0_attr = make_scalar_attribute(header_handle, "Omega0", hf.Omega0);
-  auto OmegaBaryon_attr = make_scalar_attribute(header_handle, "OmegaBaryon", hf.OmegaBaryon);
-  auto OmegaLambda_attr = make_scalar_attribute(header_handle, "OmegaLambda", hf.OmegaLambda);
-  auto Redshift_attr = make_scalar_attribute(header_handle, "Redshift", hf.Redshift);
-  auto Time_attr = make_scalar_attribute(header_handle, "Time", hf.Time);
-  auto UnitLength_in_cm_attr = make_scalar_attribute(header_handle, "UnitLength_in_cm", hf.UnitLength_in_cm);
-  auto UnitMass_in_g_attr = make_scalar_attribute(header_handle, "UnitMass_in_g", hf.UnitMass_in_g);
-  auto UnitVelocity_in_cm_per_s_attr = make_scalar_attribute(header_handle, "UnitVelocity_in_cm_per_s", hf.UnitVelocity_in_cm_per_s);
-  // if (comm.rank() == 0)
-  {
-    BoxSize_attr.write(BoxSize_attr.getDataType(), &hf.BoxSize);
-    Composition_vector_length_attr.write(Composition_vector_length_attr.getDataType(), &hf.Composition_vector_length);
-    Flag_Cooling_attr.write(Flag_Cooling_attr.getDataType(), &hf.Flag_Cooling);
-    Flag_DoublePrecision_attr.write(Flag_DoublePrecision_attr.getDataType(), &hf.Flag_DoublePrecision);
-    Flag_Feedback_attr.write(Flag_Feedback_attr.getDataType(), &hf.Flag_Feedback);
-    Flag_Metals_attr.write(Flag_Metals_attr.getDataType(), &hf.Flag_Metals);
-    Flag_Sfr_attr.write(Flag_Sfr_attr.getDataType(), &hf.Flag_Sfr);
-    Flag_StellarAge_attr.write(Flag_StellarAge_attr.getDataType(), &hf.Flag_StellarAge);
-    HubbleParam_attr.write(HubbleParam_attr.getDataType(), &hf.HubbleParam);
-    NumFilesPerSnapshot_attr.write(NumFilesPerSnapshot_attr.getDataType(), &hf.NumFilesPerSnapshot);
-    Omega0_attr.write(Omega0_attr.getDataType(), &hf.Omega0);
-    OmegaBaryon_attr.write(OmegaBaryon_attr.getDataType(), &hf.OmegaBaryon);
-    OmegaLambda_attr.write(OmegaLambda_attr.getDataType(), &hf.OmegaLambda);
-    Redshift_attr.write(Redshift_attr.getDataType(), &hf.Redshift);
-    Time_attr.write(Time_attr.getDataType(), &hf.Time);
-    UnitLength_in_cm_attr.write(UnitLength_in_cm_attr.getDataType(), &hf.UnitLength_in_cm);
-    UnitMass_in_g_attr.write(UnitMass_in_g_attr.getDataType(), &hf.UnitMass_in_g);
-    UnitVelocity_in_cm_per_s_attr.write(UnitVelocity_in_cm_per_s_attr.getDataType(), &hf.UnitVelocity_in_cm_per_s);
-    
-
-    MassTable_attr.write(MassTable_attr.getDataType(), hf.MassTable.data());
-    NumPart_ThisFile_attr.write(NumPart_ThisFile_attr.getDataType(), hf.NumPart_ThisFile.data());
-    NumPart_Total_attr.write(NumPart_Total_attr.getDataType(), hf.NumPart_Total.data());
-    NumPart_Total_HighWord_attr.write(NumPart_Total_HighWord_attr.getDataType(), hf.NumPart_Total_HighWord.data());
-    
-    Git_commit_attr.write(Git_commit_attr.getDataType(), hf.Git_commit);
-    Git_date_attr.write(Git_date_attr.getDataType(), hf.Git_date);
-    
-  }
+  write_scalar_attribute(header_handle, "BoxSize", hf.BoxSize);
+  write_scalar_attribute(header_handle, "Composition_vector_length", hf.Composition_vector_length);
+  write_scalar_attribute(header_handle, "Flag_Cooling", hf.Flag_Cooling);
+  write_scalar_attribute(header_handle, "Flag_DoublePrecision", hf.Flag_DoublePrecision);
+  write_scalar_attribute(header_handle, "Flag_Feedback", hf.Flag_Feedback);
+  write_scalar_attribute(header_handle, "Flag_Metals", hf.Flag_Metals);
+  write_scalar_attribute(header_handle, "Flag_Sfr", hf.Flag_Sfr);
+  write_scalar_attribute(header_handle, "Flag_StellarAge", hf.Flag_StellarAge);
+  write_string_attribute(header_handle, "Git_commit", hf.Git_commit);
+  write_string_attribute(header_handle, "Git_date", hf.Git_date);
+  write_scalar_attribute(header_handle, "HubbleParam", hf.HubbleParam);
+  write_array_attribute(header_handle, "MassTable", hf.MassTable);
+  write_scalar_attribute(header_handle, "NumFilesPerSnapshot", hf.NumFilesPerSnapshot);
+  write_array_attribute(header_handle, "NumPart_ThisFile", hf.NumPart_ThisFile);
+  write_array_attribute(header_handle, "NumPart_Total", hf.NumPart_Total);
+  write_array_attribute(header_handle, "NumPart_Total_HighWord", hf.NumPart_Total_HighWord);
+  write_scalar_attribute(header_handle, "Omega0", hf.Omega0);
+  write_scalar_attribute(header_handle, "OmegaBaryon", hf.OmegaBaryon);
+  write_scalar_attribute(header_handle, "OmegaLambda", hf.OmegaLambda);
+  write_scalar_attribute(header_handle, "Redshift", hf.Redshift);
+  write_scalar_attribute(header_handle, "Time", hf.Time);
+  write_scalar_attribute(header_handle, "UnitLength_in_cm", hf.UnitLength_in_cm);
+  write_scalar_attribute(header_handle, "UnitMass_in_g", hf.UnitMass_in_g);
+  write_scalar_attribute(header_handle, "UnitVelocity_in_cm_per_s", hf.UnitVelocity_in_cm_per_s);
 }

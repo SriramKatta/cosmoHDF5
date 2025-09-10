@@ -56,8 +56,6 @@ try
   write_header(header_handle, header_data, islan_comm);
   
 
-
-
   // auto root_file_handle = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
   // auto PartType1 = root_file_handle.createGroup("PartType1");
 
