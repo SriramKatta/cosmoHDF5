@@ -1,10 +1,16 @@
 #pragma once
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <mpicpp.hpp>
 #include <H5Cpp.h>
+#include <filesystem>
+#include "mpi_helpers.hpp"
 
 #define DEBUG_PRINT fmt::print("reached {}\n", __LINE__)
+
+#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
+
 
 #define DURATION_MEASURE(duration, local_comm, world_comm, codeblock) \
   auto duration##start = MPI_Wtime();                                 \

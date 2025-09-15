@@ -1,71 +1,7 @@
 #pragma once
 
-#include <array>
-#include <cstdint>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-#include <string>
-#include <vector>
-
 #include "attribute_helper.hpp"
-
-#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
-
-struct headerfields
-{
-  double BoxSize;
-  std::int32_t Composition_vector_length;
-  std::int32_t Flag_Cooling;
-  std::int32_t Flag_DoublePrecision;
-  std::int32_t Flag_Feedback;
-  std::int32_t Flag_Metals;
-  std::int32_t Flag_Sfr;
-  std::int32_t Flag_StellarAge;
-  std::int32_t NumFilesPerSnapshot;
-  std::array<std::int32_t, 6> NumPart_ThisFile;
-  std::array<std::uint32_t, 6> NumPart_Total;
-  std::array<std::uint32_t, 6> NumPart_Total_HighWord;
-  double HubbleParam;
-  double Omega0;
-  double OmegaBaryon;
-  double OmegaLambda;
-  double Redshift;
-  double Time;
-  double UnitLength_in_cm;
-  double UnitMass_in_g;
-  double UnitVelocity_in_cm_per_s;
-  std::array<double, 6> MassTable;
-  std::string Git_commit;
-  std::string Git_date;
-
-  void print() const
-  {
-    PRINT_VAR(BoxSize);
-    PRINT_VAR(Composition_vector_length);
-    PRINT_VAR(Flag_Cooling);
-    PRINT_VAR(Flag_DoublePrecision);
-    PRINT_VAR(Flag_Feedback);
-    PRINT_VAR(Flag_Metals);
-    PRINT_VAR(Flag_Sfr);
-    PRINT_VAR(Flag_StellarAge);
-    PRINT_VAR(Git_commit);
-    PRINT_VAR(Git_date);
-    PRINT_VAR(HubbleParam);
-    PRINT_VAR(MassTable);
-    PRINT_VAR(NumFilesPerSnapshot);
-    PRINT_VAR(NumPart_ThisFile);
-    PRINT_VAR(NumPart_Total);
-    PRINT_VAR(NumPart_Total_HighWord);
-    PRINT_VAR(Omega0);
-    PRINT_VAR(OmegaBaryon);
-    PRINT_VAR(OmegaLambda);
-    PRINT_VAR(Redshift);
-    PRINT_VAR(Time);
-    PRINT_VAR(UnitLength_in_cm);
-    PRINT_VAR(UnitMass_in_g);
-    PRINT_VAR(UnitVelocity_in_cm_per_s);
-  }
-};
+#include "general_utils.hpp"
 
 struct attributes
 {
@@ -149,7 +85,14 @@ struct dataset_wattr : public attributes, dataset
   }
 };
 
-struct parttype0
+struct PartTypeBase
+{
+  virtual void read_from_file_1proc(const H5::H5File &) = 0;
+  virtual void write_parallel() const = 0;
+  virtual ~PartTypeBase() = default;
+};
+
+struct parttype0 : public PartTypeBase
 {
   dataset_wattr CenterOfMass;
   dataset_wattr Coordinates;
@@ -178,7 +121,7 @@ struct parttype0
   dataset_wattr SubfindHsml;
   dataset_wattr SubfindVelDisp;
   dataset_wattr Velocities;
-  void read_from_file_1proc(const H5::H5File &file)
+  void read_from_file_1proc(const H5::H5File &file) override
   {
     auto partgroup = file.openGroup("PartType0");
     CenterOfMass.read_from_file_1proc(partgroup, "CenterOfMass");
@@ -209,9 +152,13 @@ struct parttype0
     SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
     Velocities.read_from_file_1proc(partgroup, "Velocities");
   }
+  void write_parallel() const override
+  {
+    // TODO
+  }
 };
 
-struct parttype1
+struct parttype1 : public PartTypeBase
 {
   dataset_wattr Coordinates;
   dataset_wattr ParticleIDs;
@@ -221,7 +168,7 @@ struct parttype1
   dataset_wattr SubfindHsml;
   dataset_wattr SubfindVelDisp;
   dataset_wattr Velocities;
-  void read_from_file_1proc(const H5::H5File &file)
+  void read_from_file_1proc(const H5::H5File &file) override
   {
     auto partgroup = file.openGroup("PartType1");
     Coordinates.read_from_file_1proc(partgroup, "Coordinates");
@@ -233,23 +180,31 @@ struct parttype1
     SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
     Velocities.read_from_file_1proc(partgroup, "Velocities");
   }
+  void write_parallel() const override
+  {
+    // TODO
+  }
 };
 
-struct parttype3
+struct parttype3 : public PartTypeBase
 {
   dataset FluidQuantities;
   dataset ParentID;
   dataset TracerID;
-  void read_from_file_1proc(const H5::H5File &file)
+  void read_from_file_1proc(const H5::H5File &file) override
   {
     auto partgroup = file.openGroup("PartType1");
     FluidQuantities.read_from_file_1proc(partgroup, "FluidQuantities");
     ParentID.read_from_file_1proc(partgroup, "ParentID");
     TracerID.read_from_file_1proc(partgroup, "TracerID");
   }
+  void write_parallel() const override
+  {
+    
+  }
 };
 
-struct parttype4
+struct parttype4 : public PartTypeBase
 {
   dataset_wattr BirthPos;
   dataset_wattr BirthVel;
@@ -269,7 +224,7 @@ struct parttype4
   dataset_wattr SubfindHsml;
   dataset_wattr SubfindVelDisp;
   dataset_wattr Velocities;
-  void read_from_file_1proc(const H5::H5File &file)
+  void read_from_file_1proc(const H5::H5File &file) override
   {
     auto partgroup = file.openGroup("PartType4");
     BirthPos.read_from_file_1proc(partgroup, "BirthPos");
@@ -291,9 +246,13 @@ struct parttype4
     SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
     Velocities.read_from_file_1proc(partgroup, "Velocities");
   }
+  void write_parallel() const override
+  {
+    // TODO
+  }
 };
 
-struct parttype5
+struct parttype5 : public PartTypeBase
 {
   dataset BH_BPressure;
   dataset_wattr BH_CumEgyInjection_QM;
@@ -319,7 +278,7 @@ struct parttype5
   dataset_wattr SubfindHsml;
   dataset_wattr SubfindVelDisp;
   dataset_wattr Velocities;
-  void read_from_file_1proc(const H5::H5File &file)
+  void read_from_file_1proc(const H5::H5File &file) override
   {
     auto partgrp = file.openGroup("PartType5");
     BH_BPressure.read_from_file_1proc(partgrp, "BH_BPressure");
@@ -346,5 +305,9 @@ struct parttype5
     SubfindHsml.read_from_file_1proc(partgrp, "SubfindHsml");
     SubfindVelDisp.read_from_file_1proc(partgrp, "SubfindVelDisp");
     Velocities.read_from_file_1proc(partgrp, "Velocities");
+  }
+  void write_parallel() const override
+  {
+    // TODO
   }
 };
