@@ -36,7 +36,7 @@ headerfields read_header(const H5::H5File &file)
   return hf;
 }
 
-void write_header(const H5::Group &header_handle, const headerfields &hf, const mpicpp::comm &comm)
+void write_header(const H5::Group &header_handle, const headerfields &hf)
 {
   write_scalar_attribute(header_handle, "BoxSize", hf.BoxSize);
   write_scalar_attribute(header_handle, "Composition_vector_length", hf.Composition_vector_length);

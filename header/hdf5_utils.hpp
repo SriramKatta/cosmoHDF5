@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <filesystem>
 #include <mpicpp.hpp>
+#include <mpi_helpers.hpp>
 
 template <typename VT>
 constexpr H5::PredType get_pred_type()
@@ -24,7 +25,7 @@ constexpr H5::PredType get_pred_type()
     static_assert(!sizeof(VT), "Unsupported type for get_pred_type");
 }
 
-int count_hdf5_files(std::filesystem::__cxx11::path &infiles_dir)
+int count_hdf5_files(std::filesystem::path &infiles_dir)
 {
   namespace fs = std::filesystem;
   int numfiles{0};
@@ -61,3 +62,15 @@ inline H5::DSetMemXferPropList create_mpi_xfer(H5FD_mpio_xfer_t mode = H5FD_MPIO
   H5Pclose(id);
   return plist;
 }
+
+H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour, unsigned int flags = H5F_ACC_TRUNC)
+{
+  auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
+  auto facc = create_mpi_fapl(island_comm);
+  return {ofname, flags, facc};
+}
+
+H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpi_state& state, unsigned int flags = H5F_ACC_TRUNC) {
+  return create_parallel_file_with_groups(outfiles_dir, state.island_comm, state.i_color, flags);
+}
+

@@ -45,3 +45,14 @@ int exception_handler()
 
   return EXIT_FAILURE;
 }
+
+std::filesystem::path create_out_files_dir(const std::filesystem::path &in_files_dir, const mpi_state &state)
+{
+  auto out_file_dir = in_files_dir / "out";
+    if (state.w_rank == 0)
+  {
+    std::filesystem::create_directories(out_file_dir);
+  }
+  state.world_comm.ibarrier(); // ensure directory is created before any rank tries to write to it
+  return out_file_dir;
+}

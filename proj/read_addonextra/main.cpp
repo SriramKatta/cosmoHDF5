@@ -51,7 +51,7 @@ try
   auto writefile = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
   auto header_handle = writefile.createGroup("/Header");
 
-  write_header(header_handle, header_data, islan_comm);
+  write_header(header_handle, header_data);
   
 
   return EXIT_SUCCESS;

@@ -81,13 +81,6 @@ std::vector<VT> read_1proc_perisland(const std::string &ifname, const std::strin
   return data;
 }
 
-H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour)
-{
-  auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
-  auto facc = create_mpi_fapl(island_comm);
-  return {ofname, H5F_ACC_TRUNC, facc};
-}
-
 template <size_t COLS, typename VT>
 void mpi_filldata(H5::Group &group,
                   const std::string &datasetname,
