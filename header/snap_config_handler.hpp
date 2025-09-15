@@ -1,0 +1,109 @@
+#pragma once
+
+#include <H5Cpp.h>
+#include "general_utils.hpp"
+#include "attribute_helper.hpp"
+
+struct darkconfigfields
+{
+  std::string ALLOW_DIRECT_SUMMATION;
+  std::string CHUNKING;
+  std::string DEBUG;
+  double DIRECT_SUMMATION_THRESHOLD;
+  double DOUBLEPRECISION;
+  std::string DOUBLEPRECISION_FFTW;
+  std::string ENLARGE_DYNAMIC_RANGE_IN_TIME;
+  std::string EVALPOTENTIAL;
+  std::string FOF;
+  double FOF_PRIMARY_LINK_TYPES;
+  double FOF_SECONDARY_LINK_TYPES;
+  std::string HAVE_HDF5;
+  std::string HIERARCHICAL_GRAVITY;
+  std::string HOST_MEMORY_REPORTING;
+  std::string LONGIDS;
+  std::string NGB_TREE_DOUBLEPRECISION;
+  double NSOFTTYPES;
+  double NTYPES;
+  std::string OUTPUTPOTENTIAL;
+  std::string OUTPUT_CENTER_OF_MASS;
+  std::string OUTPUT_COORDINATES_IN_DOUBLEPRECISION;
+  std::string OUTPUT_CPU_CSV;
+  std::string PERIODIC;
+  double PMGRID;
+  std::string PROCESS_TIMES_OF_OUTPUTLIST;
+  double RCUT;
+  std::string REDUCE_FLUSH;
+  std::string SAVE_HSML_IN_SNAPSHOT;
+  std::string SELFGRAVITY;
+  std::string SUBFIND;
+  std::string SUBFIND_CALC_MORE;
+  std::string TREE_BASED_TIMESTEPS;
+  std::string VORONOI_DYNAMIC_UPDATE;
+};
+
+struct nondarkconfigdata : darkconfigfields
+{
+  std::string ADAPTIVE_HYDRO_SOFTENING;
+  std::string BH_ADIOS_ONLY_ABOVE_MINIMUM_DENSITY;
+  std::string BH_ADIOS_RANDOMIZED;
+  std::string BH_ADIOS_WIND;
+  std::string BH_ADIOS_WIND_WITH_QUASARTHRESHOLD;
+  std::string BH_ADIOS_WIND_WITH_VARIABLE_QUASARTHRESHOLD;
+  std::string BH_BONDI_DEFAULT;
+  std::string BH_DO_NOT_PREVENT_MERGERS;
+  std::string BH_EXACT_INTEGRATION;
+  std::string BH_NEW_CENTERING;
+  std::string BH_PRESSURE_CRITERION;
+  std::string BH_THERMALFEEDBACK;
+  std::string BH_USE_ALFVEN_SPEED_IN_BONDI;
+  std::string BLACK_HOLES;
+  std::string CELL_CENTER_GRAVITY;
+  std::string COOLING;
+  double DRAINGAS;
+  std::string ENFORCE_JEANS_STABILITY_OF_CELLS;
+  std::string ENFORCE_JEANS_STABILITY_OF_CELLS_EEOS;
+  std::string GENERATE_GAS_IN_ICS;
+  std::string GENERATE_TRACER_MC_IN_ICS;
+  std::string GFM;
+  std::string GFM_AGN_RADIATION;
+  std::string GFM_CHEMTAGS;
+  double GFM_CONST_IMF;
+  std::string GFM_COOLING_METAL;
+  std::string GFM_DISCRETE_ENRICHMENT;
+  std::string GFM_NORMALIZED_METAL_ADVECTION;
+  std::string GFM_OUTPUT_BIRTH_POS;
+  double GFM_OUTPUT_MASK;
+  std::string GFM_PREENRICH;
+  std::string GFM_RPROCESS;
+  std::string GFM_SPLITFE;
+  double GFM_STELLAR_EVOLUTION;
+  std::string GFM_STELLAR_PHOTOMETRICS;
+  std::string GFM_WINDS;
+  std::string GFM_WINDS_STRIPPING;
+  std::string GFM_WINDS_THERMAL_NEWDEF;
+  double GFM_WINDS_VARIABLE;
+  std::string GFM_WINDS_VARIABLE_HUBBLE;
+  std::string GFM_WIND_ENERGY_METAL_DEPENDENCE;
+  double INDIVIDUAL_GRAVITY_SOFTENING;
+  std::string MHD;
+  std::string MHD_POWELL;
+  std::string MHD_POWELL_LIMIT_TIMESTEP;
+  std::string MHD_SEEDFIELD;
+  std::string MULTIPLE_NODE_SOFTENING;
+  std::string REFINEMENT_MERGE_CELLS;
+  std::string REFINEMENT_SPLIT_CELLS;
+  std::string REGULARIZE_MESH_CM_DRIFT;
+  std::string REGULARIZE_MESH_CM_DRIFT_USE_SOUNDSPEED;
+  std::string REGULARIZE_MESH_FACE_ANGLE;
+  std::string RIEMANN_HLLD;
+  std::string SHOCK_FINDER_BEFORE_OUTPUT;
+  std::string SOFTEREQS;
+  double SPLIT_PARTICLE_TYPE;
+  std::string SUBBOX_SNAPSHOTS;
+  double TRACER_MC;
+  double TRACER_MC_NUM_FLUID_QUANTITIES;
+  double TRACER_MC_STORE_WHAT;
+  std::string USE_SFR;
+  std::string UVB_SELF_SHIELDING;
+  std::string VORONOI;
+};

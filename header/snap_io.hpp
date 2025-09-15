@@ -2,3 +2,4 @@
 
 #include "snap_header_handler.hpp"
 #include "snap_partdata_handler.hpp"
+#include "snap_config_handler.hpp"
