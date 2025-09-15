@@ -32,7 +32,7 @@ std::string read_string_attribute(const H5::H5Object &obj, const std::string &at
 
 // Write a scalar attribute
 template <typename VT>
-void write_scalar_attribute(const H5::Group &obj, const std::string &attr_name, const VT &value)
+void write_scalar_attribute(const H5::H5Object &obj, const std::string &attr_name, const VT &value)
 {
   H5::DataSpace scalar_space(H5S_SCALAR);
   H5::Attribute attr;
@@ -49,7 +49,7 @@ void write_scalar_attribute(const H5::Group &obj, const std::string &attr_name, 
 }
 
 template <typename VT>
-void write_array_attribute(const H5::Group &obj, const std::string &attr_name, const std::array<VT, 6> &values)
+void write_array_attribute(const H5::H5Object &obj, const std::string &attr_name, const std::array<VT, 6> &values)
 {
   hsize_t dims[1] = {6};
   H5::DataSpace dataspace(1, dims);
@@ -67,7 +67,7 @@ void write_array_attribute(const H5::Group &obj, const std::string &attr_name, c
 }
 
 // Write a string attribute
-void write_string_attribute(const H5::Group &obj, const std::string &attr_name, const std::string &value)
+void write_string_attribute(const H5::H5Object &obj, const std::string &attr_name, const std::string &value)
 {
   H5::StrType str_type(H5::PredType::C_S1, value.size());
   H5::DataSpace scalar_space(H5S_SCALAR);
