@@ -27,39 +27,38 @@ try
   parttype4 pt4;
   parttype5 pt5;
 
-  auto header = read_header(in_file);
-  if (header.NumFilesPerSnapshot != numfiles)
-  {
-    throw std::runtime_error(fmt::format("Number of files in snapshot header ({}) does not match number of files found in directory ({})", header.NumFilesPerSnapshot, numfiles));
-  }
-  std::array<PartTypeBase *, 6> pts{};
-  if (header.NumPart_Total[0] > 0)
-    pts[0] = &pt0;
-  if (header.NumPart_Total[1] > 0)
-    pts[1] = &pt1;
-  if (header.NumPart_Total[3] > 0)
-    pts[3] = &pt3;
-  if (header.NumPart_Total[4] > 0)
-    pts[4] = &pt4;
-  if (header.NumPart_Total[5] > 0)
-    pts[5] = &pt5;
+  headerfields header(in_file);
+  // if (header.NumFilesPerSnapshot != numfiles)
+  // {
+  //   throw std::runtime_error(fmt::format("Number of files in snapshot header ({}) does not match number of files found in directory ({})", header.NumFilesPerSnapshot, numfiles));
+  // }
+  // std::array<PartTypeBase *, 6> pts{};
+  // if (header.NumPart_Total[0] > 0)
+  //   pts[0] = &pt0;
+  // if (header.NumPart_Total[1] > 0)
+  //   pts[1] = &pt1;
+  // if (header.NumPart_Total[3] > 0)
+  //   pts[3] = &pt3;
+  // if (header.NumPart_Total[4] > 0)
+  //   pts[4] = &pt4;
+  // if (header.NumPart_Total[5] > 0)
+  //   pts[5] = &pt5;
 
-  for (auto *pt : pts)
-  {
-    if (pt)
-    {
-      pt->read_from_file_1proc(in_file);
-      // pt->print();
-    }
-  }
+  // for (auto *pt : pts)
+  // {
+  //   if (pt)
+  //   {
+  //     pt->read_from_file_1proc(in_file);
+  //     // pt->print();
+  //   }
+  // }
 
   // distribute data
 
   // write data
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
-  auto header_group = outfile.createGroup("Header");
-  write_header(header_group, header);
+  header.write_to_file(outfile);
 
   return 0;
 }

@@ -31,6 +31,11 @@ struct headerfields
   std::string Git_commit;
   std::string Git_date;
 
+  headerfields(const H5::H5File &file)
+  {
+    read_from_file(file);
+  }
+
   void print() const
   {
     PRINT_VAR(BoxSize);
@@ -88,8 +93,9 @@ struct headerfields
     UnitVelocity_in_cm_per_s = read_scalar_attribute<double>(header, "UnitVelocity_in_cm_per_s");
   }
 
-  void write_to_file(const H5::Group &header_handle) const
+  void write_to_file(const H5::H5File &file) const
   {
+    auto header_handle = file.createGroup("/Header");
     write_scalar_attribute(header_handle, "BoxSize", BoxSize);
     write_scalar_attribute(header_handle, "Composition_vector_length", Composition_vector_length);
     write_scalar_attribute(header_handle, "Flag_Cooling", Flag_Cooling);
@@ -116,15 +122,3 @@ struct headerfields
     write_scalar_attribute(header_handle, "UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
   }
 };
-
-headerfields read_header(const H5::H5File &file)
-{
-  headerfields hf;
-  hf.read_from_file(file);
-  return hf;
-}
-
-void write_header(const H5::Group &header_handle, const headerfields &hf)
-{
-  hf.write_to_file(header_handle);
-}

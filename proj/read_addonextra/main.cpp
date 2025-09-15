@@ -8,8 +8,7 @@
 
 namespace fs = std::filesystem;
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 try
 {
   auto env = mpicpp::environment(&argc, &argv);
@@ -45,14 +44,11 @@ try
 
   auto read_file = H5::H5File(ifname, H5F_ACC_RDONLY);
 
-  auto header_data = read_header(read_file);
-  
+  headerfields header_data(read_file);
 
   auto writefile = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
-  auto header_handle = writefile.createGroup("/Header");
 
-  write_header(header_handle, header_data);
-  
+  header_data.write_to_file(writefile);
 
   return EXIT_SUCCESS;
 }
