@@ -15,11 +15,14 @@ try
   mpicpp::environment env(&argc, &argv);
   mpi_state state(numfiles);
   std::filesystem::path in_file_name(fmt::format("{}snap_099.{:d}.hdf5", in_files_dir.string(), state.i_color));
-  // state.print(in_file_name);
+// state.print(in_file_name);
 
-  // read data
+// read data
+#if 0
   auto in_file = create_parallel_file_with_groups(in_files_dir, state, H5F_ACC_RDONLY);
-
+#else
+  auto in_file = H5::H5File(in_file_name.string(), H5F_ACC_RDONLY);
+#endif
   // all possible part types
   parttype0 pt0;
   parttype1 pt1;
@@ -28,30 +31,28 @@ try
   parttype5 pt5;
 
   headerfields header(in_file);
-  // if (header.NumFilesPerSnapshot != numfiles)
-  // {
-  //   throw std::runtime_error(fmt::format("Number of files in snapshot header ({}) does not match number of files found in directory ({})", header.NumFilesPerSnapshot, numfiles));
-  // }
-  // std::array<PartTypeBase *, 6> pts{};
-  // if (header.NumPart_Total[0] > 0)
-  //   pts[0] = &pt0;
-  // if (header.NumPart_Total[1] > 0)
-  //   pts[1] = &pt1;
-  // if (header.NumPart_Total[3] > 0)
-  //   pts[3] = &pt3;
-  // if (header.NumPart_Total[4] > 0)
-  //   pts[4] = &pt4;
-  // if (header.NumPart_Total[5] > 0)
-  //   pts[5] = &pt5;
+  std::array<PartTypeBase *, 6> pts{};
+  if (header.NumPart_Total[0] > 0)
+    pts[0] = &pt0;
+  if (header.NumPart_Total[1] > 0)
+    pts[1] = &pt1;
+  if (header.NumPart_Total[3] > 0)
+    pts[3] = &pt3;
+  if (header.NumPart_Total[4] > 0)
+    pts[4] = &pt4;
+  if (header.NumPart_Total[5] > 0)
+    pts[5] = &pt5;
 
-  // for (auto *pt : pts)
-  // {
-  //   if (pt)
-  //   {
-  //     pt->read_from_file_1proc(in_file);
-  //     // pt->print();
-  //   }
-  // }
+  for (auto *pt : pts)
+  {
+    if (pt)
+    {
+      pt->read_from_file_1proc(in_file, state);
+      // pt->print();
+    }
+  }
+
+  // distribute_data
 
   // distribute data
 
@@ -59,6 +60,8 @@ try
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
   header.write_to_file(outfile);
+  // header.print();
+  pts[1]->write_to_file_parallel(outfile);
 
   return 0;
 }

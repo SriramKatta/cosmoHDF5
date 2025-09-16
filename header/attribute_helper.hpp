@@ -3,30 +3,24 @@
 #include "hdf5_utils.hpp"
 
 template <typename VT>
-VT read_scalar_attribute(const H5::H5Object &obj, const std::string &attr_name)
+void read_scalar_attribute(const H5::H5Object &obj, const std::string &attr_name, VT& value)
 {
-  VT value;
   H5::Attribute attr = obj.openAttribute(attr_name);
   attr.read(attr.getDataType(), &value);
-  return value;
 }
 
 template <typename VT>
-std::array<VT, 6> read_array_attribute(const H5::H5Object &obj, const std::string &attr_name)
+void read_array_attribute(const H5::H5Object &obj, const std::string &attr_name, std::array<VT, 6> &values)
 {
-  std::array<VT, 6> values;
   H5::Attribute attr = obj.openAttribute(attr_name);
   attr.read(attr.getDataType(), values.data());
-  return values;
 }
 
-std::string read_string_attribute(const H5::H5Object &obj, const std::string &attr_name)
+void read_string_attribute(const H5::H5Object &obj, const std::string &attr_name, std::string &value)
 {
   H5::Attribute attr = obj.openAttribute(attr_name);
   H5::StrType str_type = attr.getStrType();
-  std::string value;
   attr.read(str_type, value);
-  return value;
 }
 
 

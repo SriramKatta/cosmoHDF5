@@ -67,30 +67,30 @@ struct headerfields
   void read_from_file(const H5::H5File &file)
   {
     H5::Group header = file.openGroup("/Header");
-    BoxSize = read_scalar_attribute<double>(header, "BoxSize");
-    Composition_vector_length = read_scalar_attribute<std::int32_t>(header, "Composition_vector_length");
-    Flag_Cooling = read_scalar_attribute<std::int32_t>(header, "Flag_Cooling");
-    Flag_DoublePrecision = read_scalar_attribute<std::int32_t>(header, "Flag_DoublePrecision");
-    Flag_Feedback = read_scalar_attribute<std::int32_t>(header, "Flag_Feedback");
-    Flag_Metals = read_scalar_attribute<std::int32_t>(header, "Flag_Metals");
-    Flag_Sfr = read_scalar_attribute<std::int32_t>(header, "Flag_Sfr");
-    Flag_StellarAge = read_scalar_attribute<std::int32_t>(header, "Flag_StellarAge");
-    Git_commit = read_string_attribute(header, "Git_commit");
-    Git_date = read_string_attribute(header, "Git_date");
-    HubbleParam = read_scalar_attribute<double>(header, "HubbleParam");
-    MassTable = read_array_attribute<double>(header, "MassTable");
-    NumFilesPerSnapshot = read_scalar_attribute<std::int32_t>(header, "NumFilesPerSnapshot");
-    NumPart_ThisFile = read_array_attribute<std::int32_t>(header, "NumPart_ThisFile");
-    NumPart_Total = read_array_attribute<std::uint32_t>(header, "NumPart_Total");
-    NumPart_Total_HighWord = read_array_attribute<std::uint32_t>(header, "NumPart_Total_HighWord");
-    Omega0 = read_scalar_attribute<double>(header, "Omega0");
-    OmegaBaryon = read_scalar_attribute<double>(header, "OmegaBaryon");
-    OmegaLambda = read_scalar_attribute<double>(header, "OmegaLambda");
-    Redshift = read_scalar_attribute<double>(header, "Redshift");
-    Time = read_scalar_attribute<double>(header, "Time");
-    UnitLength_in_cm = read_scalar_attribute<double>(header, "UnitLength_in_cm");
-    UnitMass_in_g = read_scalar_attribute<double>(header, "UnitMass_in_g");
-    UnitVelocity_in_cm_per_s = read_scalar_attribute<double>(header, "UnitVelocity_in_cm_per_s");
+    read_scalar_attribute(header, "BoxSize", BoxSize);
+    read_scalar_attribute(header, "Composition_vector_length", Composition_vector_length);
+    read_scalar_attribute(header, "Flag_Cooling", Flag_Cooling);
+    read_scalar_attribute(header, "Flag_DoublePrecision", Flag_DoublePrecision);
+    read_scalar_attribute(header, "Flag_Feedback", Flag_Feedback);
+    read_scalar_attribute(header, "Flag_Metals", Flag_Metals);
+    read_scalar_attribute(header, "Flag_Sfr", Flag_Sfr);
+    read_scalar_attribute(header, "Flag_StellarAge", Flag_StellarAge);
+    read_string_attribute(header, "Git_commit", Git_commit);
+    read_string_attribute(header, "Git_date", Git_date);
+    read_scalar_attribute(header, "HubbleParam", HubbleParam);
+    read_array_attribute(header, "MassTable", MassTable);
+    read_scalar_attribute(header, "NumFilesPerSnapshot", NumFilesPerSnapshot);
+    read_array_attribute(header, "NumPart_ThisFile", NumPart_ThisFile);
+    read_array_attribute(header, "NumPart_Total", NumPart_Total);
+    read_array_attribute(header, "NumPart_Total_HighWord", NumPart_Total_HighWord);
+    read_scalar_attribute(header, "Omega0", Omega0);
+    read_scalar_attribute(header, "OmegaBaryon", OmegaBaryon);
+    read_scalar_attribute(header, "OmegaLambda", OmegaLambda);
+    read_scalar_attribute(header, "Redshift", Redshift);
+    read_scalar_attribute(header, "Time", Time);
+    read_scalar_attribute(header, "UnitLength_in_cm", UnitLength_in_cm);
+    read_scalar_attribute(header, "UnitMass_in_g", UnitMass_in_g);
+    read_scalar_attribute(header, "UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
   }
 
   void write_to_file(const H5::H5File &file) const
