@@ -20,7 +20,7 @@ try
     auto part0grp = file.openGroup("PartType0");
     // auto coords_ds = part0grp.openDataSet("GFM_MetalsTagged");
 
-    dataset_data<double> Coordinates;
+    dataset_wattr<double> Coordinates;
     Coordinates.read_dataset_1proc(part0grp, "GFM_Metallicity", state.i_rank);
 
     Coordinates.distribute_data(state.island_comm);

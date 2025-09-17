@@ -29,8 +29,13 @@ struct dataset_attributes : virtual dataset_base
     PRINT_VAR(to_cgs);
     PRINT_VAR(velocity_scaling);
   }
-  virtual void read_from_file(H5::DataSet &dataset)
+  virtual void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
   {
+    if (rank != 0)
+    {
+      return;
+    }
+    auto dataset = grp.openDataSet(dataset_name);
     read_scalar_attribute(dataset, "a_scaling", a_scaling);
     read_scalar_attribute(dataset, "h_scaling", h_scaling);
     read_scalar_attribute(dataset, "length_scaling", length_scaling);
@@ -38,8 +43,18 @@ struct dataset_attributes : virtual dataset_base
     read_scalar_attribute(dataset, "to_cgs", to_cgs);
     read_scalar_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
-  virtual void write_to_file_parallel(H5::DataSet &dataset) const
+  virtual void distribute_data(const mpicpp::comm &comm) override
   {
+    comm.ibcast(a_scaling, 0);
+    comm.ibcast(h_scaling, 0);
+    comm.ibcast(length_scaling, 0);
+    comm.ibcast(mass_scaling, 0);
+    comm.ibcast(to_cgs, 0);
+    comm.ibcast(velocity_scaling, 0);
+  }
+  virtual void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank) const override
+  {
+    auto dataset = grp.openDataSet(dataset_name);
     write_scalar_attribute(dataset, "a_scaling", a_scaling);
     write_scalar_attribute(dataset, "h_scaling", h_scaling);
     write_scalar_attribute(dataset, "length_scaling", length_scaling);
@@ -66,20 +81,21 @@ struct dataset_data : virtual dataset_base
   }
   void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
   {
-    if (rank == 0)
+    if (rank != 0)
     {
-      auto ds = grp.openDataSet(dataset_name);
-      auto space = ds.getSpace();
-      auto dataspace_rank = space.getSimpleExtentNdims();
-      local_dataspace_dims.resize(dataspace_rank);
-      total_dataspace_dims.resize(dataspace_rank);
-      local_dataspace_max_dims.resize(dataspace_rank);
-      space.getSimpleExtentDims(local_dataspace_dims.data(), local_dataspace_max_dims.data());
-      total_dataspace_dims = local_dataspace_dims;
-      int total_elem = std::accumulate(local_dataspace_dims.begin(), local_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
-      data_chunk.resize(total_elem);
-      ds.read(data_chunk.data(), get_pred_type<VT>());
+      return;
     }
+    auto ds = grp.openDataSet(dataset_name);
+    auto space = ds.getSpace();
+    auto dataspace_rank = space.getSimpleExtentNdims();
+    local_dataspace_dims.resize(dataspace_rank);
+    total_dataspace_dims.resize(dataspace_rank);
+    local_dataspace_max_dims.resize(dataspace_rank);
+    space.getSimpleExtentDims(local_dataspace_dims.data(), local_dataspace_max_dims.data());
+    total_dataspace_dims = local_dataspace_dims;
+    int total_elem = std::accumulate(local_dataspace_dims.begin(), local_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
+    data_chunk.resize(total_elem);
+    ds.read(data_chunk.data(), get_pred_type<VT>());
   }
   void distribute_data(const mpicpp::comm &comm) override
   {
@@ -142,16 +158,30 @@ struct dataset_data : virtual dataset_base
   }
 };
 
-// template <typename VT>
-// struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
-// {
-//   void print() const
-//   {
-//     dataset_attributes::print();
-//     dataset<VT>::print();
-//   }
-//   void write_to_file_
-// };
+template <typename VT>
+struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
+{
+  void print() const
+  {
+    dataset_attributes::print();
+    dataset_data<VT>::print();
+  }
+  void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
+  {
+    dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
+    dataset_data<VT>::read_dataset_1proc(grp, dataset_name, rank);
+  }
+  void distribute_data(const mpicpp::comm &comm) override
+  {
+    dataset_attributes::distribute_data(comm);
+    dataset_data<VT>::distribute_data(comm);
+  }
+  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank) const override
+  {
+    dataset_attributes::write_to_file_parallel(grp, dataset_name, rank);
+    dataset_data<VT>::write_to_file_parallel(grp, dataset_name, rank);
+  }
+};
 
 // struct PartTypeBase
 // {
