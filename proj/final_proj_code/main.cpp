@@ -61,7 +61,7 @@ try
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
   header.write_to_file(outfile);
   // header.print();
-  pts[1]->write_to_file_parallel(outfile);
+  // pts[1]->write_to_file_parallel(outfile);
 
   return 0;
 }

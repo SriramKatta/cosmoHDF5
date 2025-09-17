@@ -6,24 +6,46 @@
 #include <mpicpp.hpp>
 #include <mpi_helpers.hpp>
 
+template <typename T>
+struct hdf5_pred_type {
+    static_assert(sizeof(T) == 0, "Unsupported type for HDF5 PredType");
+};
+
+template <>
+struct hdf5_pred_type<double> {
+    inline static const H5::PredType value = H5::PredType::IEEE_F64LE;
+};
+
+template <>
+struct hdf5_pred_type<float> {
+    inline static const H5::PredType value = H5::PredType::IEEE_F32LE;
+};
+
+template <>
+struct hdf5_pred_type<std::uint64_t> {
+    inline static const H5::PredType value = H5::PredType::STD_U64LE;
+};
+
+template <>
+struct hdf5_pred_type<std::uint32_t> {
+    inline static const H5::PredType value = H5::PredType::STD_U32LE;
+};
+
+template <>
+struct hdf5_pred_type<std::int64_t> {
+    inline static const H5::PredType value = H5::PredType::STD_I64LE;
+};
+
+template <>
+struct hdf5_pred_type<std::int32_t> {
+    inline static const H5::PredType value = H5::PredType::STD_I32LE;
+};
+
 template <typename VT>
-constexpr H5::PredType get_pred_type()
-{
-  if constexpr (std::is_same_v<VT, double>)
-    return H5::PredType::IEEE_F64LE;
-  else if constexpr (std::is_same_v<VT, float>)
-    return H5::PredType::IEEE_F32LE;
-  else if constexpr (std::is_same_v<VT, std::uint64_t>)
-    return H5::PredType::STD_U64LE;
-  else if constexpr (std::is_same_v<VT, std::uint32_t>)
-    return H5::PredType::STD_U32LE;
-  else if constexpr (std::is_same_v<VT, std::int64_t>)
-    return H5::PredType::STD_I64LE;
-  else if constexpr (std::is_same_v<VT, std::int32_t>)
-    return H5::PredType::STD_I32LE;
-  else
-    static_assert(!sizeof(VT), "Unsupported type for get_pred_type");
+constexpr H5::PredType get_pred_type() {
+    return hdf5_pred_type<VT>::value;
 }
+
 
 int count_hdf5_files(std::filesystem::path &infiles_dir)
 {

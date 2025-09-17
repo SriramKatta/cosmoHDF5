@@ -7,7 +7,7 @@
 #include <filesystem>
 #include "mpi_helpers.hpp"
 
-#define DEBUG_PRINT fmt::print("reached {}\n", __LINE__)
+#define DEBUG_PRINT fmt::print("reached {} in file {}\n", __LINE__, __FILE__)
 
 #define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
 
