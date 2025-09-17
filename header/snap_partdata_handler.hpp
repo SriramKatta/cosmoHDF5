@@ -7,7 +7,7 @@ struct dataset_base
 {
   virtual void read_dataset_1proc(const H5::Group &, const std::string &, const int) = 0;
   virtual void distribute_data(const mpicpp::comm &) = 0;
-  virtual void write_to_file_parallel(const H5::Group &, const std::string &, const int) const = 0;
+  virtual void write_to_file_parallel(const H5::Group &, const std::string &, const mpicpp::comm &) const = 0;
   virtual void print() const = 0;
   virtual ~dataset_base() = default;
 };
@@ -20,7 +20,7 @@ struct dataset_attributes : virtual dataset_base
   double mass_scaling{0.0};
   double to_cgs{0.0};
   double velocity_scaling{0.0};
-  void print() const
+  virtual void print() const override
   {
     PRINT_VAR(a_scaling);
     PRINT_VAR(h_scaling);
@@ -52,7 +52,7 @@ struct dataset_attributes : virtual dataset_base
     comm.ibcast(to_cgs, 0);
     comm.ibcast(velocity_scaling, 0);
   }
-  virtual void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank) const override
+  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const override
   {
     auto dataset = grp.openDataSet(dataset_name);
     write_scalar_attribute(dataset, "a_scaling", a_scaling);
@@ -132,7 +132,7 @@ struct dataset_data : virtual dataset_base
     data_chunk = std::move(local_data);
   }
 
-  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank = 0) const override
+  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const override
   {
     H5::DataSpace file_space(total_dataspace_dims.size(), total_dataspace_dims.data());
     H5::DataSpace mem_space(local_dataspace_dims.size(), local_dataspace_dims.data());
@@ -141,8 +141,8 @@ struct dataset_data : virtual dataset_base
     auto dataset_handle = grp.createDataSet(dataset_name, h5dt, file_space);
 
     hsize_t start_row = 0;
-    MPI_Exscan(&local_dataspace_dims[0], &start_row, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0)
+    MPI_Exscan(&local_dataspace_dims[0], &start_row, 1, MPI_LONG_LONG, MPI_SUM, comm.get());
+    if (comm.rank() == 0)
       start_row = 0;
 
     std::vector<hsize_t> start(local_dataspace_dims.size(), 0);
@@ -168,18 +168,18 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
   }
   void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
   {
-    dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
     dataset_data<VT>::read_dataset_1proc(grp, dataset_name, rank);
+    dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
   }
   void distribute_data(const mpicpp::comm &comm) override
   {
-    dataset_attributes::distribute_data(comm);
     dataset_data<VT>::distribute_data(comm);
+    dataset_attributes::distribute_data(comm);
   }
-  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank) const override
+  void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const override
   {
-    dataset_attributes::write_to_file_parallel(grp, dataset_name, rank);
-    dataset_data<VT>::write_to_file_parallel(grp, dataset_name, rank);
+    dataset_data<VT>::write_to_file_parallel(grp, dataset_name, comm);
+    dataset_attributes::write_to_file_parallel(grp, dataset_name, comm);
   }
 };
 
