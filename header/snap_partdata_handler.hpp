@@ -475,3 +475,70 @@ struct PartType5 : public PartTypeCommon<PartType5>
                     SubfindHsml, SubfindVelDisp, Velocities);
   }
 };
+
+struct part_groups
+{
+  std::unique_ptr<PartType0> pt0;
+  std::unique_ptr<PartType1> pt1;
+  std::unique_ptr<PartType3> pt3;
+  std::unique_ptr<PartType4> pt4;
+  std::unique_ptr<PartType5> pt5;
+
+  part_groups() = default;
+
+  void setup(const header_group &header)
+  {
+    if (header.NumPart_Total[0] > 0)
+      pt0 = std::make_unique<PartType0>();
+    if (header.NumPart_Total[1] > 0)
+      pt1 = std::make_unique<PartType1>();
+    if (header.NumPart_Total[3] > 0)
+      pt3 = std::make_unique<PartType3>();
+    if (header.NumPart_Total[4] > 0)
+      pt4 = std::make_unique<PartType4>();
+    if (header.NumPart_Total[5] > 0)
+      pt5 = std::make_unique<PartType5>();
+  }
+
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  {
+    if (pt0)
+      pt0->read_from_file_1proc(file, state);
+    if (pt1)
+      pt1->read_from_file_1proc(file, state);
+    if (pt3)
+      pt3->read_from_file_1proc(file, state);
+    if (pt4)
+      pt4->read_from_file_1proc(file, state);
+    if (pt5)
+      pt5->read_from_file_1proc(file, state);
+  }
+
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    if (pt0)
+      pt0->distribute_data(comm);
+    if (pt1)
+      pt1->distribute_data(comm);
+    if (pt3)
+      pt3->distribute_data(comm);
+    if (pt4)
+      pt4->distribute_data(comm);
+    if (pt5)
+      pt5->distribute_data(comm);
+  }
+
+  void write_to_file_parallel(H5::H5File &file, const mpi_state &state) const
+  {
+    if (pt0)
+      pt0->write_to_file_parallel(file, state);
+    if (pt1)
+      pt1->write_to_file_parallel(file, state);
+    if (pt3)
+      pt3->write_to_file_parallel(file, state);
+    if (pt4)
+      pt4->write_to_file_parallel(file, state);
+    if (pt5)
+      pt5->write_to_file_parallel(file, state);
+  }
+};

@@ -27,38 +27,17 @@ try
 
   header_group header;
   config_group dconfig;
+  part_groups parts;
+
   header.read_from_file(in_file);
+
+  parts.setup(header);
+
   dconfig.read_from_file(in_file);
-  // header.print();
-  std::array<PartTypeBase *, 6> pts{};
-  if (header.NumPart_Total[0] > 0)
-    pts[0] = &pt0;
-  if (header.NumPart_Total[1] > 0)
-    pts[1] = &pt1;
-  if (header.NumPart_Total[3] > 0)
-    pts[3] = &pt3;
-  if (header.NumPart_Total[4] > 0)
-    pts[4] = &pt4;
-  if (header.NumPart_Total[5] > 0)
-    pts[5] = &pt5;
 
-  // Step 1: read datasets on rank 0
-  for (auto *pt : pts)
-  {
-    if (pt)
-    {
-      pt->read_from_file_1proc(in_file, state);
-    }
-  }
+  parts.read_from_file_1proc(in_file, state);
 
-  // // Step 2: distribute data across ranks
-  for (auto *pt : pts)
-  {
-    if (pt)
-    {
-      pt->distribute_data(state.island_comm);
-    }
-  }
+  parts.distribute_data(state.island_comm);
 
   // Step 3: write output in parallel
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
@@ -67,13 +46,7 @@ try
   header.write_to_file(outfile);
   dconfig.write_to_file(outfile);
 
-  for (auto *pt : pts)
-  {
-    if (pt)
-    {
-      pt->write_to_file_parallel(outfile, state);
-    }
-  }
+  parts.write_to_file_parallel(outfile, state);
 
   return 0;
 }
