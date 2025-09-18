@@ -11,7 +11,7 @@ DIR2=$2
 
 files=("$DIR1"/snap_099*)
 
-echo "All comparisons started."
+echo "All comparisons started on $DIR1"
 for f1 in "${files[@]}"; do
 (
     fname=$(basename "$f1")
