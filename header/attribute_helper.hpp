@@ -100,20 +100,30 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
                              { fmt::print("{:35s}: {}\n", name, value); });
   }
 
-  void read_from_file(const H5::H5File &file)
+  void read_from_group(const H5::Group &grp)
   {
-    H5::Group grp = file.openGroup(get_group_name());
     const_cast<Derived *>(static_cast<const Derived *>(this))
         ->process_attributes([&](const char *name, auto &value)
                              { read_attribute(grp, name, value); });
   }
 
-  void write_to_file(const H5::H5File &file) const
+  void write_to_group(const H5::Group &grp) const
   {
-    H5::Group grp = file.createGroup(get_group_name());
     const_cast<Derived *>(static_cast<const Derived *>(this))
         ->process_attributes([&](const char *name, const auto &value)
                              { write_attribute(grp, name, value); });
+  }
+
+  void read_from_file(const H5::H5File &file)
+  {
+    H5::Group header = file.openGroup(get_group_name());
+    read_from_group(header);
+  }
+
+  void write_to_file(const H5::H5File &file) const
+  {
+    H5::Group header = file.createGroup(get_group_name());
+    write_to_group(header);
   }
 
   template <typename Func>

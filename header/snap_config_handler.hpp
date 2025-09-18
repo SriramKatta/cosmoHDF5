@@ -251,46 +251,60 @@ struct nondarkconfigdata_large : public hdf5_attribute_groups_base<nondarkconfig
 
 struct config_group
 {
-
-  std::vector<std::unique_ptr<hdf5_attribute_group_iface>> parts;
+  std::unique_ptr<darkconfigfields_base> dcb;
+  std::unique_ptr<darkconfigfields_large> dcl;
+  std::unique_ptr<nondarkconfigdata> ndc;
+  std::unique_ptr<nondarkconfigdata_large> ndcl;
 
   config_group() = default;
 
   void read_from_file(const H5::H5File &file)
   {
     H5::Group cfg = file.openGroup("/Config");
-
-    parts.push_back(std::make_unique<darkconfigfields_base>());
+    dcb = std::make_unique<darkconfigfields_base>();
+    dcb->read_from_group(cfg);
 
     if (cfg.attrExists("RUNNING_SAFETY_FILE"))
     {
-      parts.push_back(std::make_unique<darkconfigfields_large>());
+      dcl = std::make_unique<darkconfigfields_large>();
+      dcl->read_from_group(cfg);
     }
 
     if (cfg.attrExists("ADAPTIVE_HYDRO_SOFTENING"))
     {
-      parts.push_back(std::make_unique<nondarkconfigdata>());
+      ndc = std::make_unique<nondarkconfigdata>();
+      ndc->read_from_group(cfg);
     }
 
     if (cfg.attrExists("CHECKSUM_DEBUG"))
     {
-      parts.push_back(std::make_unique<nondarkconfigdata_large>());
+      ndcl = std::make_unique<nondarkconfigdata_large>();
+      ndcl->read_from_group(cfg);
     }
   }
 
   void write_to_file(H5::H5File &file) const
   {
-    for (const auto &p : parts)
-    {
-      p->write_to_file(file);
-    }
+    auto cfg = file.createGroup("/Config");
+    if (dcb)
+      dcb->write_to_group(cfg);
+    if (dcl)
+      dcl->write_to_group(cfg);
+    if (ndc)
+      ndc->write_to_group(cfg);
+    if (ndcl)
+      ndcl->write_to_group(cfg);
   }
 
   void print() const
   {
-    for (const auto &p : parts)
-    {
-      p->print();
-    }
+    if (dcb)
+      dcb->print();
+    if (dcl)
+      dcl->print();
+    if (ndc)
+      ndc->print();
+    if (ndcl)
+      ndcl->print();
   }
 };

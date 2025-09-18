@@ -28,19 +28,19 @@ try
   header_group header;
   config_group dconfig;
   header.read_from_file(in_file);
-  dconfig.read_from_file(in_file);
+  // dconfig.read_from_file(in_file);
   // header.print();
-  std::array<PartTypeBase *, 6> pts{};
-  if (header.NumPart_Total[0] > 0)
-    pts[0] = &pt0;
-  if (header.NumPart_Total[1] > 0)
-    pts[1] = &pt1;
-  if (header.NumPart_Total[3] > 0)
-    pts[3] = &pt3;
-  if (header.NumPart_Total[4] > 0)
-    pts[4] = &pt4;
-  if (header.NumPart_Total[5] > 0)
-    pts[5] = &pt5;
+  // std::array<PartTypeBase *, 6> pts{};
+  // if (header.NumPart_Total[0] > 0)
+  //   pts[0] = &pt0;
+  // if (header.NumPart_Total[1] > 0)
+  //   pts[1] = &pt1;
+  // if (header.NumPart_Total[3] > 0)
+  //   pts[3] = &pt3;
+  // if (header.NumPart_Total[4] > 0)
+  //   pts[4] = &pt4;
+  // if (header.NumPart_Total[5] > 0)
+  //   pts[5] = &pt5;
 
   // Step 1: read datasets on rank 0
   // for (auto *pt : pts)
@@ -65,7 +65,7 @@ try
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
 
   header.write_to_file(outfile);
-  dconfig.write_to_file(outfile);
+  // dconfig.write_to_file(outfile);
 
   // for (auto *pt : pts)
   // {

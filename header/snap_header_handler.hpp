@@ -33,7 +33,7 @@ struct header_group : public hdf5_attribute_groups_base<header_group>
 
   header_group() = default;
 
-  const char* get_group_name() const override { return "/Header"; }
+  const char *get_group_name() const override { return "/Header"; }
 
   template <typename Func>
   void process_attributes(Func &&f)
