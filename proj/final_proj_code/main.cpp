@@ -39,13 +39,12 @@ try
 
   parts.distribute_data(state.island_comm);
 
-  // Step 3: write output in parallel
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
-
+  
+  // Step 3: write output in parallel
   header.write_to_file(outfile);
   dconfig.write_to_file(outfile);
-
   parts.write_to_file_parallel(outfile, state);
 
   return 0;
