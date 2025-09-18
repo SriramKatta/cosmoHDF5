@@ -26,7 +26,9 @@ try
   PartType5 pt5;
 
   headerfields header;
+  darkconfigfields dconfig;
   header.read_from_file(in_file);
+  dconfig.read_from_file(in_file);
   // header.print();
   std::array<PartTypeBase *, 6> pts{};
   if (header.NumPart_Total[0] > 0)
@@ -63,6 +65,7 @@ try
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
 
   header.write_to_file(outfile);
+  dconfig.write_to_file(outfile);
 
   // for (auto *pt : pts)
   // {

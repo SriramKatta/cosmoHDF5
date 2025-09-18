@@ -64,7 +64,8 @@ void write_attribute(const H5::H5Object &obj, const std::string &attr_name, cons
 template <>
 void write_attribute<std::string>(const H5::H5Object &obj, const std::string &attr_name, const std::string &value)
 {
-  H5::StrType str_type(H5::PredType::C_S1, value.size());
+  std::size_t len = value.size() ? value.size() : 1;
+  H5::StrType str_type(H5::PredType::C_S1, len);
   H5::DataSpace scalar_space(H5S_SCALAR);
   H5::Attribute attr;
   if (obj.attrExists(attr_name))
@@ -82,16 +83,17 @@ void write_attribute<std::string>(const H5::H5Object &obj, const std::string &at
 template <typename Derived>
 struct hdf5_attribute_groups_base
 {
+  virtual const char* get_group_name() const = 0;
   void print() const
   {
     const_cast<Derived *>(static_cast<const Derived *>(this))
         ->process_attributes([](const char *name, const auto &value)
-                             { fmt::print("{:25s}: {}\n", name, value); });
+                             { fmt::print("{:35s}: {}\n", name, value); });
   }
 
   void read_from_file(const H5::H5File &file)
   {
-    H5::Group grp = file.openGroup("/Header");
+    H5::Group grp = file.openGroup(get_group_name());
     const_cast<Derived *>(static_cast<const Derived *>(this))
         ->process_attributes([&](const char *name, auto &value)
                              { read_attribute(grp, name, value); });
@@ -99,9 +101,15 @@ struct hdf5_attribute_groups_base
 
   void write_to_file(const H5::H5File &file) const
   {
-    H5::Group grp = file.createGroup("/Header");
+    H5::Group grp = file.createGroup(get_group_name());
     const_cast<Derived *>(static_cast<const Derived *>(this))
         ->process_attributes([&](const char *name, const auto &value)
                              { write_attribute(grp, name, value); });
+  }
+
+  template <typename Func>
+  void process_attributes(Func &&f)
+  {
+    static_cast<Derived*>(this)->process_attributes(std::forward<Func>(f));
   }
 };
