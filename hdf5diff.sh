@@ -14,14 +14,12 @@ files=("$DIR1"/snap_099*)
 
 # List of datasets to compare
 DATASETS=(
-    "/PartType1/Coordinates"
-    "/PartType1/Velocities"
-    "/PartType1/ParticleIDs"
-    "/PartType1/Potential"
-    "/PartType1/SubfindDMDensity"
-    "/PartType1/SubfindDensity"
-    "/PartType1/SubfindHsml"
-    "/PartType1/SubfindVelDisp"
+    "/Header"
+    "/PartType0"
+    "/PartType1"
+    "/PartType3"
+    "/PartType4"
+    "/PartType5"
 )
 
 for f1 in "${files[@]}"; do
@@ -45,7 +43,7 @@ for f1 in "${files[@]}"; do
         status=$?
 
         if [ $status -eq 0 ]; then
-            echo "🟢 PERFECT LY SAME: $ds (no differences listed)"
+            echo "🟢 PERFECTLY SAME: $ds (no differences listed)"
         elif [ $status -eq 1 ]; then
             if [ "$diff_output" == "" ]; then
                     echo "✅ DATA OKAY PASS MAYBE SOME OTHER ISSUE: $ds"       
