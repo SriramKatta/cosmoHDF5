@@ -31,9 +31,9 @@ sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n910Dark/"
 
 sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n910/"
 
-sbatch --nodes=4 run_finalexe.sh "${TNG_DIR}/TNG100n1820Dark/"
+sbatch --nodes=4 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n1820Dark/"
 
-sbatch --nodes=4 run_finalexe.sh "${TNG_DIR}/TNG100n1820/"
-    
+sbatch --nodes=4 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n1820/"
+
 
 watch squeue --me
