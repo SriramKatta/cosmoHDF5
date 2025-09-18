@@ -18,31 +18,28 @@ try
   // state.print(in_file_name);
 
   auto in_file = H5::H5File(in_file_name.string(), H5F_ACC_RDONLY);
-  // all possible part types
-  PartType0 pt0;
-  PartType1 pt1;
-  PartType3 pt3;
-  PartType4 pt4;
-  PartType5 pt5;
 
   header_group header;
   config_group dconfig;
+  param_group params;
   part_groups parts;
 
   header.read_from_file(in_file);
 
-  parts.setup(header);
-
   dconfig.read_from_file(in_file);
 
+  params.read_from_file(in_file);
+
+  parts.setup(header);
   parts.read_from_file_1proc(in_file, state);
 
   parts.distribute_data(state.island_comm);
 
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
-  
+
   // Step 3: write output in parallel
+  params.write_to_file(outfile);
   header.write_to_file(outfile);
   dconfig.write_to_file(outfile);
   parts.write_to_file_parallel(outfile, state);
