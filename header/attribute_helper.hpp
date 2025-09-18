@@ -120,6 +120,21 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
     read_from_group(header);
   }
 
+  void read_from_file_1proc(const H5::Group &file, const mpi_state &state)
+  {
+    if(state.i_rank != 0)
+      return;
+    H5::Group header = file.openGroup(get_group_name());
+    read_from_group(header);
+  }
+
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    const_cast<Derived *>(static_cast<const Derived *>(this))
+        ->process_attributes([&](const char *, auto &value)
+                             { comm.ibcast(value, 0); });
+  }
+
   void write_to_file(const H5::H5File &file) const
   {
     H5::Group header = file.createGroup(get_group_name());
@@ -132,3 +147,4 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
     static_cast<Derived *>(this)->process_attributes(std::forward<Func>(f));
   }
 };
+

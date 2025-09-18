@@ -24,15 +24,17 @@ try
   param_group params;
   part_groups parts;
 
-  header.read_from_file(in_file);
-
-  dconfig.read_from_file(in_file);
-
-  params.read_from_file(in_file);
-
+  // Step 1: read input on rank 0
+  header.read_from_file_1proc(in_file);
+  dconfig.read_from_file_1proc(in_file);
+  params.read_from_file_1proc(in_file);
   parts.setup(header);
   parts.read_from_file_1proc(in_file, state);
 
+  // Step 2: distribute data to all ranks
+  header.distribute_data(state.island_comm);
+  dconfig.distribute_data(state.island_comm);
+  params.distribute_data(state.island_comm);
   parts.distribute_data(state.island_comm);
 
   auto out_file_dir = create_out_files_dir(in_files_dir, state);

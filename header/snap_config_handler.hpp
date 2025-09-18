@@ -283,6 +283,49 @@ struct config_group
     }
   }
 
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  {
+    if (state.i_rank != 0)
+    {
+      return;
+    }
+    read_from_file(file);
+  }
+
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    bool has_dcb = (dcb != nullptr);
+    bool has_dcl = (dcl != nullptr);
+    bool has_ndc = (ndc != nullptr);
+    bool has_ndcl = (ndcl != nullptr);
+
+    // Broadcast presence of each config part
+    comm.ibcast(has_dcb, 0);
+    comm.ibcast(has_dcl, 0);
+    comm.ibcast(has_ndc, 0);
+    comm.ibcast(has_ndcl, 0);
+
+    // Allocate if needed
+    if (has_dcb && !dcb)
+      dcb = std::make_unique<darkconfigfields_base>();
+    if (has_dcl && !dcl)
+      dcl = std::make_unique<darkconfigfields_large>();
+    if (has_ndc && !ndc)
+      ndc = std::make_unique<nondarkconfigdata>();
+    if (has_ndcl && !ndcl)
+      ndcl = std::make_unique<nondarkconfigdata_large>();
+
+    // Broadcast data
+    if (dcb)
+      dcb->distribute_data(comm);
+    if (dcl)
+      dcl->distribute_data(comm);
+    if (ndc)
+      ndc->distribute_data(comm);
+    if (ndcl)
+      ndcl->distribute_data(comm);
+  }
+
   void write_to_file(H5::H5File &file) const
   {
     auto cfg = file.createGroup("/Config");
