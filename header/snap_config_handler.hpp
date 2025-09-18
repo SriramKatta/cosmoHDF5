@@ -4,7 +4,7 @@
 #include "general_utils.hpp"
 #include "attribute_helper.hpp"
 
-struct darkconfigfields : public hdf5_attribute_groups_base<darkconfigfields>
+struct darkconfigfields_base : public hdf5_attribute_groups_base<darkconfigfields_base>
 {
   std::string ALLOW_DIRECT_SUMMATION;
   std::string CHUNKING;
@@ -40,9 +40,9 @@ struct darkconfigfields : public hdf5_attribute_groups_base<darkconfigfields>
   std::string TREE_BASED_TIMESTEPS;
   std::string VORONOI_DYNAMIC_UPDATE;
 
-  darkconfigfields() = default;
+  darkconfigfields_base() = default;
 
-  const char* get_group_name() const override { return "/Config"; }
+  const char *get_group_name() const override { return "/Config"; }
 
   template <typename Func>
   void process_attributes(Func &&f)
@@ -83,10 +83,21 @@ struct darkconfigfields : public hdf5_attribute_groups_base<darkconfigfields>
   }
 };
 
-struct nondarkconfigdata : public darkconfigfields, public hdf5_attribute_groups_base<nondarkconfigdata>
+struct darkconfigfields_large : public hdf5_attribute_groups_base<darkconfigfields_large>
+{
+  std::string RUNNING_SAFETY_FILE;
+  darkconfigfields_large() = default;
+  const char *get_group_name() const override { return "/Config"; }
+  template <typename Func>
+  void process_attributes(Func &&f)
+  {
+    f("RUNNING_SAFETY_FILE", RUNNING_SAFETY_FILE);
+  }
+};
+
+struct nondarkconfigdata : public hdf5_attribute_groups_base<nondarkconfigdata>
 {
   std::string ADAPTIVE_HYDRO_SOFTENING;
-  std::string ALLOW_DIRECT_SUMMATION;
   std::string BH_ADIOS_ONLY_ABOVE_MINIMUM_DENSITY;
   std::string BH_ADIOS_RANDOMIZED;
   std::string BH_ADIOS_WIND;
@@ -101,20 +112,10 @@ struct nondarkconfigdata : public darkconfigfields, public hdf5_attribute_groups
   std::string BH_USE_ALFVEN_SPEED_IN_BONDI;
   std::string BLACK_HOLES;
   std::string CELL_CENTER_GRAVITY;
-  std::string CHUNKING;
   std::string COOLING;
-  std::string DEBUG;
-  double DIRECT_SUMMATION_THRESHOLD;
-  double DOUBLEPRECISION;
-  std::string DOUBLEPRECISION_FFTW;
   double DRAINGAS;
   std::string ENFORCE_JEANS_STABILITY_OF_CELLS;
   std::string ENFORCE_JEANS_STABILITY_OF_CELLS_EEOS;
-  std::string ENLARGE_DYNAMIC_RANGE_IN_TIME;
-  std::string EVALPOTENTIAL;
-  std::string FOF;
-  double FOF_PRIMARY_LINK_TYPES;
-  double FOF_SECONDARY_LINK_TYPES;
   std::string GENERATE_GAS_IN_ICS;
   std::string GENERATE_TRACER_MC_IN_ICS;
   std::string GFM;
@@ -137,56 +138,35 @@ struct nondarkconfigdata : public darkconfigfields, public hdf5_attribute_groups
   double GFM_WINDS_VARIABLE;
   std::string GFM_WINDS_VARIABLE_HUBBLE;
   std::string GFM_WIND_ENERGY_METAL_DEPENDENCE;
-  std::string HAVE_HDF5;
-  std::string HIERARCHICAL_GRAVITY;
-  std::string HOST_MEMORY_REPORTING;
   double INDIVIDUAL_GRAVITY_SOFTENING;
-  std::string LONGIDS;
   std::string MHD;
   std::string MHD_POWELL;
   std::string MHD_POWELL_LIMIT_TIMESTEP;
   std::string MHD_SEEDFIELD;
   std::string MULTIPLE_NODE_SOFTENING;
-  std::string NGB_TREE_DOUBLEPRECISION;
-  double NSOFTTYPES;
-  double NTYPES;
-  std::string OUTPUTPOTENTIAL;
-  std::string OUTPUT_CENTER_OF_MASS;
-  std::string OUTPUT_COORDINATES_IN_DOUBLEPRECISION;
-  std::string OUTPUT_CPU_CSV;
-  std::string PERIODIC;
-  double PMGRID;
-  std::string PROCESS_TIMES_OF_OUTPUTLIST;
-  double RCUT;
-  std::string REDUCE_FLUSH;
   std::string REFINEMENT_MERGE_CELLS;
   std::string REFINEMENT_SPLIT_CELLS;
   std::string REGULARIZE_MESH_CM_DRIFT;
   std::string REGULARIZE_MESH_CM_DRIFT_USE_SOUNDSPEED;
   std::string REGULARIZE_MESH_FACE_ANGLE;
   std::string RIEMANN_HLLD;
-  std::string SAVE_HSML_IN_SNAPSHOT;
-  std::string SELFGRAVITY;
   std::string SHOCK_FINDER_BEFORE_OUTPUT;
   std::string SOFTEREQS;
   double SPLIT_PARTICLE_TYPE;
   std::string SUBBOX_SNAPSHOTS;
-  std::string SUBFIND;
-  std::string SUBFIND_CALC_MORE;
   double TRACER_MC;
   double TRACER_MC_NUM_FLUID_QUANTITIES;
   double TRACER_MC_STORE_WHAT;
-  std::string TREE_BASED_TIMESTEPS;
   std::string USE_SFR;
   std::string UVB_SELF_SHIELDING;
   std::string VORONOI;
-  std::string VORONOI_DYNAMIC_UPDATE;
 
+  nondarkconfigdata() = default;
+  const char *get_group_name() const override { return "/Config"; }
   template <typename Func>
   void process_attributes(Func &&f)
   {
     f("ADAPTIVE_HYDRO_SOFTENING", ADAPTIVE_HYDRO_SOFTENING);
-    f("ALLOW_DIRECT_SUMMATION", ALLOW_DIRECT_SUMMATION);
     f("BH_ADIOS_ONLY_ABOVE_MINIMUM_DENSITY", BH_ADIOS_ONLY_ABOVE_MINIMUM_DENSITY);
     f("BH_ADIOS_RANDOMIZED", BH_ADIOS_RANDOMIZED);
     f("BH_ADIOS_WIND", BH_ADIOS_WIND);
@@ -201,20 +181,10 @@ struct nondarkconfigdata : public darkconfigfields, public hdf5_attribute_groups
     f("BH_USE_ALFVEN_SPEED_IN_BONDI", BH_USE_ALFVEN_SPEED_IN_BONDI);
     f("BLACK_HOLES", BLACK_HOLES);
     f("CELL_CENTER_GRAVITY", CELL_CENTER_GRAVITY);
-    f("CHUNKING", CHUNKING);
     f("COOLING", COOLING);
-    f("DEBUG", DEBUG);
-    f("DIRECT_SUMMATION_THRESHOLD", DIRECT_SUMMATION_THRESHOLD);
-    f("DOUBLEPRECISION", DOUBLEPRECISION);
-    f("DOUBLEPRECISION_FFTW", DOUBLEPRECISION_FFTW);
     f("DRAINGAS", DRAINGAS);
     f("ENFORCE_JEANS_STABILITY_OF_CELLS", ENFORCE_JEANS_STABILITY_OF_CELLS);
     f("ENFORCE_JEANS_STABILITY_OF_CELLS_EEOS", ENFORCE_JEANS_STABILITY_OF_CELLS_EEOS);
-    f("ENLARGE_DYNAMIC_RANGE_IN_TIME", ENLARGE_DYNAMIC_RANGE_IN_TIME);
-    f("EVALPOTENTIAL", EVALPOTENTIAL);
-    f("FOF", FOF);
-    f("FOF_PRIMARY_LINK_TYPES", FOF_PRIMARY_LINK_TYPES);
-    f("FOF_SECONDARY_LINK_TYPES", FOF_SECONDARY_LINK_TYPES);
     f("GENERATE_GAS_IN_ICS", GENERATE_GAS_IN_ICS);
     f("GENERATE_TRACER_MC_IN_ICS", GENERATE_TRACER_MC_IN_ICS);
     f("GFM", GFM);
@@ -237,51 +207,90 @@ struct nondarkconfigdata : public darkconfigfields, public hdf5_attribute_groups
     f("GFM_WINDS_VARIABLE", GFM_WINDS_VARIABLE);
     f("GFM_WINDS_VARIABLE_HUBBLE", GFM_WINDS_VARIABLE_HUBBLE);
     f("GFM_WIND_ENERGY_METAL_DEPENDENCE", GFM_WIND_ENERGY_METAL_DEPENDENCE);
-    f("HAVE_HDF5", HAVE_HDF5);
-    f("HIERARCHICAL_GRAVITY", HIERARCHICAL_GRAVITY);
-    f("HOST_MEMORY_REPORTING", HOST_MEMORY_REPORTING);
     f("INDIVIDUAL_GRAVITY_SOFTENING", INDIVIDUAL_GRAVITY_SOFTENING);
-    f("LONGIDS", LONGIDS);
     f("MHD", MHD);
     f("MHD_POWELL", MHD_POWELL);
     f("MHD_POWELL_LIMIT_TIMESTEP", MHD_POWELL_LIMIT_TIMESTEP);
     f("MHD_SEEDFIELD", MHD_SEEDFIELD);
     f("MULTIPLE_NODE_SOFTENING", MULTIPLE_NODE_SOFTENING);
-    f("NGB_TREE_DOUBLEPRECISION", NGB_TREE_DOUBLEPRECISION);
-    f("NSOFTTYPES", NSOFTTYPES);
-    f("NTYPES", NTYPES);
-    f("OUTPUTPOTENTIAL", OUTPUTPOTENTIAL);
-    f("OUTPUT_CENTER_OF_MASS", OUTPUT_CENTER_OF_MASS);
-    f("OUTPUT_COORDINATES_IN_DOUBLEPRECISION", OUTPUT_COORDINATES_IN_DOUBLEPRECISION);
-    f("OUTPUT_CPU_CSV", OUTPUT_CPU_CSV);
-    f("PERIODIC", PERIODIC);
-    f("PMGRID", PMGRID);
-    f("PROCESS_TIMES_OF_OUTPUTLIST", PROCESS_TIMES_OF_OUTPUTLIST);
-    f("RCUT", RCUT);
-    f("REDUCE_FLUSH", REDUCE_FLUSH);
     f("REFINEMENT_MERGE_CELLS", REFINEMENT_MERGE_CELLS);
     f("REFINEMENT_SPLIT_CELLS", REFINEMENT_SPLIT_CELLS);
     f("REGULARIZE_MESH_CM_DRIFT", REGULARIZE_MESH_CM_DRIFT);
     f("REGULARIZE_MESH_CM_DRIFT_USE_SOUNDSPEED", REGULARIZE_MESH_CM_DRIFT_USE_SOUNDSPEED);
     f("REGULARIZE_MESH_FACE_ANGLE", REGULARIZE_MESH_FACE_ANGLE);
     f("RIEMANN_HLLD", RIEMANN_HLLD);
-    f("SAVE_HSML_IN_SNAPSHOT", SAVE_HSML_IN_SNAPSHOT);
-    f("SELFGRAVITY", SELFGRAVITY);
     f("SHOCK_FINDER_BEFORE_OUTPUT", SHOCK_FINDER_BEFORE_OUTPUT);
     f("SOFTEREQS", SOFTEREQS);
     f("SPLIT_PARTICLE_TYPE", SPLIT_PARTICLE_TYPE);
     f("SUBBOX_SNAPSHOTS", SUBBOX_SNAPSHOTS);
-    f("SUBFIND", SUBFIND);
-    f("SUBFIND_CALC_MORE", SUBFIND_CALC_MORE);
     f("TRACER_MC", TRACER_MC);
     f("TRACER_MC_NUM_FLUID_QUANTITIES", TRACER_MC_NUM_FLUID_QUANTITIES);
     f("TRACER_MC_STORE_WHAT", TRACER_MC_STORE_WHAT);
-    f("TREE_BASED_TIMESTEPS", TREE_BASED_TIMESTEPS);
     f("USE_SFR", USE_SFR);
     f("UVB_SELF_SHIELDING", UVB_SELF_SHIELDING);
     f("VORONOI", VORONOI);
-    f("VORONOI_DYNAMIC_UPDATE", VORONOI_DYNAMIC_UPDATE);
   }
 };
 
+struct nondarkconfigdata_large : public hdf5_attribute_groups_base<nondarkconfigdata_large>
+{
+  std::string CHECKSUM_DEBUG;
+  std::string HUGEPAGES;
 
+  nondarkconfigdata_large() = default;
+
+  const char *get_group_name() const override { return "/Config"; }
+
+  template <typename Func>
+  void process_attributes(Func &&f)
+  {
+    f("CHECKSUM_DEBUG", CHECKSUM_DEBUG);
+    f("HUGEPAGES", HUGEPAGES);
+  }
+};
+
+struct config_group
+{
+
+  std::vector<std::unique_ptr<hdf5_attribute_group_iface>> parts;
+
+  config_group() = default;
+
+  void read_from_file(const H5::H5File &file)
+  {
+    H5::Group cfg = file.openGroup("/Config");
+
+    parts.push_back(std::make_unique<darkconfigfields_base>());
+
+    if (cfg.attrExists("RUNNING_SAFETY_FILE"))
+    {
+      parts.push_back(std::make_unique<darkconfigfields_large>());
+    }
+
+    if (cfg.attrExists("ADAPTIVE_HYDRO_SOFTENING"))
+    {
+      parts.push_back(std::make_unique<nondarkconfigdata>());
+    }
+
+    if (cfg.attrExists("CHECKSUM_DEBUG"))
+    {
+      parts.push_back(std::make_unique<nondarkconfigdata_large>());
+    }
+  }
+
+  void write_to_file(H5::H5File &file) const
+  {
+    for (const auto &p : parts)
+    {
+      p->write_to_file(file);
+    }
+  }
+
+  void print() const
+  {
+    for (const auto &p : parts)
+    {
+      p->print();
+    }
+  }
+};

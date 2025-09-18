@@ -79,11 +79,20 @@ void write_attribute<std::string>(const H5::H5Object &obj, const std::string &at
   attr.write(str_type, value);
 }
 
+struct hdf5_attribute_group_iface
+{
+  virtual ~hdf5_attribute_group_iface() = default;
+  virtual const char *get_group_name() const = 0;
+  virtual void print() const = 0;
+  virtual void read_from_file(const H5::H5File &file) = 0;
+  virtual void write_to_file(const H5::H5File &file) const = 0;
+};
+
 // ---- Base class with print/read/write ----
 template <typename Derived>
-struct hdf5_attribute_groups_base
+struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
 {
-  virtual const char* get_group_name() const = 0;
+  virtual const char *get_group_name() const = 0;
   void print() const
   {
     const_cast<Derived *>(static_cast<const Derived *>(this))
@@ -110,6 +119,6 @@ struct hdf5_attribute_groups_base
   template <typename Func>
   void process_attributes(Func &&f)
   {
-    static_cast<Derived*>(this)->process_attributes(std::forward<Func>(f));
+    static_cast<Derived *>(this)->process_attributes(std::forward<Func>(f));
   }
 };

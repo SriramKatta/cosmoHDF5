@@ -4,7 +4,7 @@
 #include "general_utils.hpp"
 #include "attribute_helper.hpp"
 
-struct headerfields : public hdf5_attribute_groups_base<headerfields>
+struct header_group : public hdf5_attribute_groups_base<header_group>
 {
   double BoxSize;
   std::int32_t Composition_vector_length;
@@ -31,7 +31,7 @@ struct headerfields : public hdf5_attribute_groups_base<headerfields>
   std::string Git_commit;
   std::string Git_date;
 
-  headerfields() = default;
+  header_group() = default;
 
   const char* get_group_name() const override { return "/Header"; }
 

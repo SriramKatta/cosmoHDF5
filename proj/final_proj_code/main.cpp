@@ -25,8 +25,8 @@ try
   PartType4 pt4;
   PartType5 pt5;
 
-  headerfields header;
-  darkconfigfields dconfig;
+  header_group header;
+  config_group dconfig;
   header.read_from_file(in_file);
   dconfig.read_from_file(in_file);
   // header.print();

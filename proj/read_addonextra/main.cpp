@@ -44,7 +44,7 @@ try
 
   auto read_file = H5::H5File(ifname, H5F_ACC_RDONLY);
 
-  headerfields header_data(read_file);
+  header_group header_data(read_file);
 
   auto writefile = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
 
