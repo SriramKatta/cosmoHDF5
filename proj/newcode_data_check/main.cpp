@@ -18,23 +18,19 @@ try
     mpi_state state(1);
 
     H5::H5File file(input_file.string(), H5F_ACC_RDONLY);
-    auto part0grp = file.openGroup("PartType0");
+
     // auto coords_ds = part0grp.openDataSet("GFM_MetalsTagged");
+    parttype0 pt0;
 
-    dataset_wattr<double> Coordinates;
-    Coordinates.read_dataset_1proc(part0grp, "GFM_WindDMVelDisp", state.i_rank);
-
-    Coordinates.distribute_data(state.island_comm);
-
-    // Coordinates.print();
+    pt0.read_from_file_1proc(file, state);
+    pt0.distribute_data(state.island_comm);
+    // pt0.print();
 
     auto para_fapl = create_mpi_fapl(state.island_comm);
 
     auto outfilename = fmt::format("output_{}.hdf5", state.i_color);
     auto out_file_hand = H5::H5File(outfilename, H5F_ACC_TRUNC, para_fapl);
-
-    auto partgrp = out_file_hand.createGroup("PartType0");
-    Coordinates.write_to_file_parallel(partgrp, "GFM_WindDMVelDisp", state.island_comm);
+    pt0.write_to_file_parallel(out_file_hand, state);
 
     return 0;
 }

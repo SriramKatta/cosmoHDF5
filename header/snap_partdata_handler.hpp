@@ -183,173 +183,171 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
   }
 };
 
-// struct PartTypeBase
-// {
-//   // virtual void read_from_file_parallel(const H5::H5File &, const mpi_state &) = 0;
-//   virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
-//   virtual void distribute_data(const mpicpp::comm &) = 0;
-//   // virtual void collect_data(const mpicpp::comm &) = 0;
-//   // virtual void write_to_file_1proc(H5::H5File &file) const = 0;
-//   virtual void write_to_file_parallel(H5::H5File &file) const = 0;
-//   virtual void print() const = 0;
-//   virtual ~PartTypeBase() = default;
-// };
+struct PartTypeBase
+{
+  virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
+  virtual void distribute_data(const mpicpp::comm &) = 0;
+  virtual void write_to_file_parallel(H5::H5File &file, const mpi_state &) const = 0;
+  virtual void print() const = 0;
+  virtual ~PartTypeBase() = default;
+};
 
-// struct parttype0 : public PartTypeBase
-// {
-//   dataset_wattr<float> CenterOfMass;
-//   dataset_wattr<double> Coordinates;
-//   dataset_wattr<float> Density;
-//   dataset_wattr<float> ElectronAbundance;
-//   dataset_data<float> EnergyDissipation;
-//   dataset_wattr<float> GFM_AGNRadiation;
-//   dataset_wattr<float> GFM_CoolingRate;
-//   dataset_wattr<float> GFM_Metallicity;
-//   dataset_wattr<float> GFM_Metals;
-//   dataset_data<float> GFM_MetalsTagged;
-//   dataset_wattr<float> GFM_WindDMVelDisp;
-//   dataset_wattr<float> GFM_WindHostHaloMass;
-//   dataset_data<float> InternalEnergy;
-//   dataset_data<float> InternalEnergyOld;
-//   dataset_data<float> Machnumber;
-//   dataset_data<float> MagneticField;
-//   dataset_wattr<float> MagneticFieldDivergence;
-//   dataset_wattr<float> Masses;
-//   dataset_wattr<float> NeutralHydrogenAbundance;
-//   dataset_wattr<std::uint64_t> ParticleIDs;
-//   dataset_wattr<float> Potential;
-//   dataset_wattr<float> StarFormationRate;
-//   dataset_wattr<float> SubfindDMDensity;
-//   dataset_wattr<float> SubfindDensity;
-//   dataset_wattr<float> SubfindHsml;
-//   dataset_wattr<float> SubfindVelDisp;
-//   dataset_wattr<float> Velocities;
-//   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
-//   {
-//     if (state.i_rank == 0)
-//     {
-//       auto partgroup = file.openGroup("PartType0");
-//       CenterOfMass.read_from_file_1proc(partgroup, "CenterOfMass");
-//       Coordinates.read_from_file_1proc(partgroup, "Coordinates");
-//       Density.read_from_file_1proc(partgroup, "Density");
-//       ElectronAbundance.read_from_file_1proc(partgroup, "ElectronAbundance");
-//       EnergyDissipation.read_from_file_1proc(partgroup, "EnergyDissipation");
-//       GFM_AGNRadiation.read_from_file_1proc(partgroup, "GFM_AGNRadiation");
-//       GFM_CoolingRate.read_from_file_1proc(partgroup, "GFM_CoolingRate");
-//       GFM_Metallicity.read_from_file_1proc(partgroup, "GFM_Metallicity");
-//       GFM_Metals.read_from_file_1proc(partgroup, "GFM_Metals");
-//       GFM_MetalsTagged.read_from_file_1proc(partgroup, "GFM_MetalsTagged");
-//       GFM_WindDMVelDisp.read_from_file_1proc(partgroup, "GFM_WindDMVelDisp");
-//       GFM_WindHostHaloMass.read_from_file_1proc(partgroup, "GFM_WindHostHaloMass");
-//       InternalEnergy.read_from_file_1proc(partgroup, "InternalEnergy");
-//       InternalEnergyOld.read_from_file_1proc(partgroup, "InternalEnergyOld");
-//       Machnumber.read_from_file_1proc(partgroup, "Machnumber");
-//       MagneticField.read_from_file_1proc(partgroup, "MagneticField");
-//       MagneticFieldDivergence.read_from_file_1proc(partgroup, "MagneticFieldDivergence");
-//       Masses.read_from_file_1proc(partgroup, "Masses");
-//       NeutralHydrogenAbundance.read_from_file_1proc(partgroup, "NeutralHydrogenAbundance");
-//       ParticleIDs.read_from_file_1proc(partgroup, "ParticleIDs");
-//       Potential.read_from_file_1proc(partgroup, "Potential");
-//       StarFormationRate.read_from_file_1proc(partgroup, "StarFormationRate");
-//       SubfindDMDensity.read_from_file_1proc(partgroup, "SubfindDMDensity");
-//       SubfindDensity.read_from_file_1proc(partgroup, "SubfindDensity");
-//       SubfindHsml.read_from_file_1proc(partgroup, "SubfindHsml");
-//       SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
-//       Velocities.read_from_file_1proc(partgroup, "Velocities");
-//     }
-//   }
-//   void print() const override
-//   {
-//     CenterOfMass.print();
-//     Coordinates.print();
-//     Density.print();
-//     ElectronAbundance.print();
-//     EnergyDissipation.print();
-//     GFM_AGNRadiation.print();
-//     GFM_CoolingRate.print();
-//     GFM_Metallicity.print();
-//     GFM_Metals.print();
-//     GFM_MetalsTagged.print();
-//     GFM_WindDMVelDisp.print();
-//     GFM_WindHostHaloMass.print();
-//     InternalEnergy.print();
-//     InternalEnergyOld.print();
-//     Machnumber.print();
-//     MagneticField.print();
-//     MagneticFieldDivergence.print();
-//     Masses.print();
-//     NeutralHydrogenAbundance.print();
-//     ParticleIDs.print();
-//     Potential.print();
-//     StarFormationRate.print();
-//     SubfindDMDensity.print();
-//     SubfindDensity.print();
-//     SubfindHsml.print();
-//     SubfindVelDisp.print();
-//     Velocities.print();
-//   }
-//   void write_to_file_parallel(H5::H5File &file) const override
-//   {
-//     auto partgroup = file.createGroup("PartType0");
-//     CenterOfMass.write_to_file_parallel(partgroup, "CenterOfMass");
-//     Coordinates.write_to_file_parallel(partgroup, "Coordinates");
-//     Density.write_to_file_parallel(partgroup, "Density");
-//     ElectronAbundance.write_to_file_parallel(partgroup, "ElectronAbundance");
-//     EnergyDissipation.write_to_file_parallel(partgroup, "EnergyDissipation");
-//     GFM_AGNRadiation.write_to_file_parallel(partgroup, "GFM_AGNRadiation");
-//     GFM_CoolingRate.write_to_file_parallel(partgroup, "GFM_CoolingRate");
-//     GFM_Metallicity.write_to_file_parallel(partgroup, "GFM_Metallicity");
-//     GFM_Metals.write_to_file_parallel(partgroup, "GFM_Metals");
-//     GFM_MetalsTagged.write_to_file_parallel(partgroup, "GFM_MetalsTagged");
-//     GFM_WindDMVelDisp.write_to_file_parallel(partgroup, "GFM_WindDMVelDisp");
-//     GFM_WindHostHaloMass.write_to_file_parallel(partgroup, "GFM_WindHostHaloMass");
-//     InternalEnergy.write_to_file_parallel(partgroup, "InternalEnergy");
-//     InternalEnergyOld.write_to_file_parallel(partgroup, "InternalEnergyOld");
-//     Machnumber.write_to_file_parallel(partgroup, "Machnumber");
-//     MagneticField.write_to_file_parallel(partgroup, "MagneticField");
-//     MagneticFieldDivergence.write_to_file_parallel(partgroup, "MagneticFieldDivergence");
-//     Masses.write_to_file_parallel(partgroup, "Masses");
-//     NeutralHydrogenAbundance.write_to_file_parallel(partgroup, "NeutralHydrogenAbundance");
-//     ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs");
-//     Potential.write_to_file_parallel(partgroup, "Potential");
-//     StarFormationRate.write_to_file_parallel(partgroup, "StarFormationRate");
-//     SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity");
-//     SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity");
-//     SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml");
-//     SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp");
-//     Velocities.write_to_file_parallel(partgroup, "Velocities");
-//   }
-//   // void write_parallel() const override
-//   // {
-//   //   CenterOfMass.write_parallel();
-//   //   Coordinates.write_parallel();
-//   //   Density.write_parallel();
-//   //   ElectronAbundance.write_parallel();
-//   //   EnergyDissipation.write_parallel();
-//   //   GFM_AGNRadiation.write_parallel();
-//   //   GFM_CoolingRate.write_parallel();
-//   //   GFM_Metallicity.write_parallel();
-//   //   GFM_Metals.write_parallel();
-//   //   GFM_MetalsTagged.write_parallel();
-//   //   GFM_WindDMVelDisp.write_parallel();
-//   //   GFM_WindHostHaloMass.write_parallel();
-//   //   InternalEnergy.write_parallel();
-//   //   InternalEnergyOld.write_parallel();
-//   //   Machnumber.write_parallel();
-//   //   MagneticField.write_parallel();
-//   //   MagneticFieldDivergence.write_parallel();
-//   //   Masses.write_parallel();
-//   //   NeutralHydrogenAbundance.write_parallel();
-//   //   ParticleIDs.write_parallel();
-//   //   Potential.write_parallel();
-//   //   StarFormationRate.write_parallel();
-//   //   SubfindDMDensity.write_parallel();
-//   //   SubfindDensity.write_parallel();
-//   //   SubfindHsml.write_parallel();
-//   //   SubfindVelDisp.write_parallel();
-//   //   Velocities.write_parallel();
-//   // }
-// };
+struct parttype0 : public PartTypeBase
+{
+  dataset_wattr<float> CenterOfMass;
+  dataset_wattr<double> Coordinates;
+  dataset_wattr<float> Density;
+  dataset_wattr<float> ElectronAbundance;
+  dataset_data<float> EnergyDissipation;
+  dataset_wattr<float> GFM_AGNRadiation;
+  dataset_wattr<float> GFM_CoolingRate;
+  dataset_wattr<float> GFM_Metallicity;
+  dataset_wattr<float> GFM_Metals;
+  dataset_data<float> GFM_MetalsTagged;
+  dataset_wattr<float> GFM_WindDMVelDisp;
+  dataset_wattr<float> GFM_WindHostHaloMass;
+  dataset_wattr<float> InternalEnergy;
+  dataset_data<float> InternalEnergyOld;
+  dataset_data<float> Machnumber;
+  dataset_data<float> MagneticField;
+  dataset_data<float> MagneticFieldDivergence;
+  dataset_wattr<float> Masses;
+  dataset_wattr<float> NeutralHydrogenAbundance;
+  dataset_wattr<std::uint64_t> ParticleIDs;
+  dataset_wattr<float> Potential;
+  dataset_wattr<float> StarFormationRate;
+  dataset_wattr<float> SubfindDMDensity;
+  dataset_wattr<float> SubfindDensity;
+  dataset_wattr<float> SubfindHsml;
+  dataset_wattr<float> SubfindVelDisp;
+  dataset_wattr<float> Velocities;
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
+  {
+    if (state.i_rank != 0)
+    {
+      return;
+    }
+    auto partgroup = file.openGroup("PartType0");
+    CenterOfMass.read_dataset_1proc(partgroup, "CenterOfMass", state.i_rank);
+    Coordinates.read_dataset_1proc(partgroup, "Coordinates", state.i_rank);
+    Density.read_dataset_1proc(partgroup, "Density", state.i_rank);
+    ElectronAbundance.read_dataset_1proc(partgroup, "ElectronAbundance", state.i_rank);
+    EnergyDissipation.read_dataset_1proc(partgroup, "EnergyDissipation", state.i_rank);
+    GFM_AGNRadiation.read_dataset_1proc(partgroup, "GFM_AGNRadiation", state.i_rank);
+    GFM_CoolingRate.read_dataset_1proc(partgroup, "GFM_CoolingRate", state.i_rank);
+    GFM_Metallicity.read_dataset_1proc(partgroup, "GFM_Metallicity", state.i_rank);
+    GFM_Metals.read_dataset_1proc(partgroup, "GFM_Metals", state.i_rank);
+    GFM_MetalsTagged.read_dataset_1proc(partgroup, "GFM_MetalsTagged", state.i_rank);
+    GFM_WindDMVelDisp.read_dataset_1proc(partgroup, "GFM_WindDMVelDisp", state.i_rank);
+    GFM_WindHostHaloMass.read_dataset_1proc(partgroup, "GFM_WindHostHaloMass", state.i_rank);
+    InternalEnergy.read_dataset_1proc(partgroup, "InternalEnergy", state.i_rank);
+    InternalEnergyOld.read_dataset_1proc(partgroup, "InternalEnergyOld", state.i_rank);
+    Machnumber.read_dataset_1proc(partgroup, "Machnumber", state.i_rank);
+    MagneticField.read_dataset_1proc(partgroup, "MagneticField", state.i_rank);
+    MagneticFieldDivergence.read_dataset_1proc(partgroup, "MagneticFieldDivergence", state.i_rank);
+    Masses.read_dataset_1proc(partgroup, "Masses", state.i_rank);
+    NeutralHydrogenAbundance.read_dataset_1proc(partgroup, "NeutralHydrogenAbundance", state.i_rank);
+    ParticleIDs.read_dataset_1proc(partgroup, "ParticleIDs", state.i_rank);
+    Potential.read_dataset_1proc(partgroup, "Potential", state.i_rank);
+    StarFormationRate.read_dataset_1proc(partgroup, "StarFormationRate", state.i_rank);
+    SubfindDMDensity.read_dataset_1proc(partgroup, "SubfindDMDensity", state.i_rank);
+    SubfindDensity.read_dataset_1proc(partgroup, "SubfindDensity", state.i_rank);
+    SubfindHsml.read_dataset_1proc(partgroup, "SubfindHsml", state.i_rank);
+    SubfindVelDisp.read_dataset_1proc(partgroup, "SubfindVelDisp", state.i_rank);
+    Velocities.read_dataset_1proc(partgroup, "Velocities", state.i_rank);
+  }
+  void distribute_data(const mpicpp::comm &comm) override
+  {
+    CenterOfMass.distribute_data(comm);
+    Coordinates.distribute_data(comm);
+    Density.distribute_data(comm);
+    ElectronAbundance.distribute_data(comm);
+    EnergyDissipation.distribute_data(comm);
+    GFM_AGNRadiation.distribute_data(comm);
+    GFM_CoolingRate.distribute_data(comm);
+    GFM_Metallicity.distribute_data(comm);
+    GFM_Metals.distribute_data(comm);
+    GFM_MetalsTagged.distribute_data(comm);
+    GFM_WindDMVelDisp.distribute_data(comm);
+    GFM_WindHostHaloMass.distribute_data(comm);
+    InternalEnergy.distribute_data(comm);
+    InternalEnergyOld.distribute_data(comm);
+    Machnumber.distribute_data(comm);
+    MagneticField.distribute_data(comm);
+    MagneticFieldDivergence.distribute_data(comm);
+    Masses.distribute_data(comm);
+    NeutralHydrogenAbundance.distribute_data(comm);
+    ParticleIDs.distribute_data(comm);
+    Potential.distribute_data(comm);
+    StarFormationRate.distribute_data(comm);
+    SubfindDMDensity.distribute_data(comm);
+    SubfindDensity.distribute_data(comm);
+    SubfindHsml.distribute_data(comm);
+    SubfindVelDisp.distribute_data(comm);
+    Velocities.distribute_data(comm);
+  }
+  void print() const override
+  {
+    CenterOfMass.print();
+    Coordinates.print();
+    Density.print();
+    ElectronAbundance.print();
+    EnergyDissipation.print();
+    GFM_AGNRadiation.print();
+    GFM_CoolingRate.print();
+    GFM_Metallicity.print();
+    GFM_Metals.print();
+    GFM_MetalsTagged.print();
+    GFM_WindDMVelDisp.print();
+    GFM_WindHostHaloMass.print();
+    InternalEnergy.print();
+    InternalEnergyOld.print();
+    Machnumber.print();
+    MagneticField.print();
+    MagneticFieldDivergence.print();
+    Masses.print();
+    NeutralHydrogenAbundance.print();
+    ParticleIDs.print();
+    Potential.print();
+    StarFormationRate.print();
+    SubfindDMDensity.print();
+    SubfindDensity.print();
+    SubfindHsml.print();
+    SubfindVelDisp.print();
+    Velocities.print();
+  }
+  void write_to_file_parallel(H5::H5File &file, const mpi_state &state) const override
+  {
+    auto partgroup = file.createGroup("PartType0");
+    CenterOfMass.write_to_file_parallel(partgroup, "CenterOfMass", state.island_comm);
+    Coordinates.write_to_file_parallel(partgroup, "Coordinates", state.island_comm);
+    Density.write_to_file_parallel(partgroup, "Density", state.island_comm);
+    ElectronAbundance.write_to_file_parallel(partgroup, "ElectronAbundance", state.island_comm);
+    EnergyDissipation.write_to_file_parallel(partgroup, "EnergyDissipation", state.island_comm);
+    GFM_AGNRadiation.write_to_file_parallel(partgroup, "GFM_AGNRadiation", state.island_comm);
+    GFM_CoolingRate.write_to_file_parallel(partgroup, "GFM_CoolingRate", state.island_comm);
+    GFM_Metallicity.write_to_file_parallel(partgroup, "GFM_Metallicity", state.island_comm);
+    GFM_Metals.write_to_file_parallel(partgroup, "GFM_Metals", state.island_comm);
+    GFM_MetalsTagged.write_to_file_parallel(partgroup, "GFM_MetalsTagged", state.island_comm);
+    GFM_WindDMVelDisp.write_to_file_parallel(partgroup, "GFM_WindDMVelDisp", state.island_comm);
+    GFM_WindHostHaloMass.write_to_file_parallel(partgroup, "GFM_WindHostHaloMass", state.island_comm);
+    InternalEnergy.write_to_file_parallel(partgroup, "InternalEnergy", state.island_comm);
+    InternalEnergyOld.write_to_file_parallel(partgroup, "InternalEnergyOld", state.island_comm);
+    Machnumber.write_to_file_parallel(partgroup, "Machnumber", state.island_comm);
+    MagneticField.write_to_file_parallel(partgroup, "MagneticField", state.island_comm);
+    MagneticFieldDivergence.write_to_file_parallel(partgroup, "MagneticFieldDivergence", state.island_comm);
+    Masses.write_to_file_parallel(partgroup, "Masses", state.island_comm);
+    NeutralHydrogenAbundance.write_to_file_parallel(partgroup, "NeutralHydrogenAbundance", state.island_comm);
+    ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs", state.island_comm);
+    Potential.write_to_file_parallel(partgroup, "Potential", state.island_comm);
+    StarFormationRate.write_to_file_parallel(partgroup, "StarFormationRate", state.island_comm);
+    SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity", state.island_comm);
+    SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity", state.island_comm);
+    SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml", state.island_comm);
+    SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp", state.island_comm);
+    Velocities.write_to_file_parallel(partgroup, "Velocities", state.island_comm);
+  }
+};
 
 // struct parttype1 : public PartTypeBase
 // {
