@@ -78,33 +78,30 @@ void write_attribute<std::string>(const H5::H5Object &obj, const std::string &at
   attr.write(str_type, value);
 }
 
+// ---- Base class with print/read/write ----
 template <typename Derived>
-struct hdf5_fields_base
+struct hdf5_attribute_groups_base
 {
-  void read_from_file(const H5::H5File &file, const std::string &group_name = "")
-  {
-    auto group = file.openGroup(group_name);
-    derived().for_each_attr([&](auto &&name, auto &value) {
-      read_attribute(group, name, value);
-    });
-  }
-
-  void write_to_file(const H5::H5File &file, const std::string &group_name = "") const
-  {
-    auto group = file.createGroup(group_name);
-    derived().for_each_attr([&](auto &&name, const auto &value) {
-      write_attribute(group, name, value);
-    });
-  }
-
   void print() const
   {
-    derived().for_each_attr([&](auto &&name, const auto &value) {
-      PRINT_VAR(value); // your macro already prints name+value
-    });
+    const_cast<Derived *>(static_cast<const Derived *>(this))
+        ->process_attributes([](const char *name, const auto &value)
+                             { fmt::print("{:25s}: {}\n", name, value); });
   }
 
-private:
-  Derived &derived() { return static_cast<Derived &>(*this); }
-  const Derived &derived() const { return static_cast<const Derived &>(*this); }
+  void read_from_file(const H5::H5File &file)
+  {
+    H5::Group grp = file.openGroup("/Header");
+    const_cast<Derived *>(static_cast<const Derived *>(this))
+        ->process_attributes([&](const char *name, auto &value)
+                             { read_attribute(grp, name, value); });
+  }
+
+  void write_to_file(const H5::H5File &file) const
+  {
+    H5::Group grp = file.createGroup("/Header");
+    const_cast<Derived *>(static_cast<const Derived *>(this))
+        ->process_attributes([&](const char *name, const auto &value)
+                             { write_attribute(grp, name, value); });
+  }
 };
