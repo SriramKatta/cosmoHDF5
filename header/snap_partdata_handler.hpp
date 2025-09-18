@@ -71,6 +71,10 @@ struct dataset_data : virtual dataset_base
   std::vector<hsize_t> local_dataspace_dims;
   std::vector<hsize_t> local_dataspace_max_dims;
   std::vector<hsize_t> total_dataspace_dims;
+  std::string name;
+
+  dataset_data(const std::string &name_) : name(name_) {}
+
   void print() const
   {
     fmt::print("Dataset info:\n");
@@ -161,6 +165,7 @@ struct dataset_data : virtual dataset_base
 template <typename VT>
 struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
 {
+  dataset_wattr(const std::string &name_) : dataset_data<VT>(name_) {}
   void print() const
   {
     dataset_attributes::print();
@@ -181,20 +186,6 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
     dataset_data<VT>::write_to_file_parallel(grp, dataset_name, comm);
     dataset_attributes::write_to_file_parallel(grp, dataset_name, comm);
   }
-};
-
-template <typename T>
-struct dataset_wattr_named : dataset_wattr<T>
-{
-  std::string name;
-  dataset_wattr_named(std::string n) : name(std::move(n)) {}
-};
-
-template <typename T>
-struct dataset_data_named : dataset_data<T>
-{
-  std::string name;
-  dataset_data_named(std::string n) : name(std::move(n)) {}
 };
 
 struct PartTypeBase
@@ -258,33 +249,33 @@ struct PartTypeCommon : PartTypeBase
 
 struct PartType0 : public PartTypeCommon<PartType0>
 {
-  dataset_wattr_named<float> CenterOfMass;
-  dataset_wattr_named<double> Coordinates;
-  dataset_wattr_named<float> Density;
-  dataset_wattr_named<float> ElectronAbundance;
-  dataset_data_named<float> EnergyDissipation;
-  dataset_wattr_named<float> GFM_AGNRadiation;
-  dataset_wattr_named<float> GFM_CoolingRate;
-  dataset_wattr_named<float> GFM_Metallicity;
-  dataset_wattr_named<float> GFM_Metals;
-  dataset_data_named<float> GFM_MetalsTagged;
-  dataset_wattr_named<float> GFM_WindDMVelDisp;
-  dataset_wattr_named<float> GFM_WindHostHaloMass;
-  dataset_wattr_named<float> InternalEnergy;
-  dataset_data_named<float> InternalEnergyOld;
-  dataset_data_named<float> Machnumber;
-  dataset_data_named<float> MagneticField;
-  dataset_data_named<float> MagneticFieldDivergence;
-  dataset_wattr_named<float> Masses;
-  dataset_wattr_named<float> NeutralHydrogenAbundance;
-  dataset_wattr_named<std::uint64_t> ParticleIDs;
-  dataset_wattr_named<float> Potential;
-  dataset_wattr_named<float> StarFormationRate;
-  dataset_wattr_named<float> SubfindDMDensity;
-  dataset_wattr_named<float> SubfindDensity;
-  dataset_wattr_named<float> SubfindHsml;
-  dataset_wattr_named<float> SubfindVelDisp;
-  dataset_wattr_named<float> Velocities;
+  dataset_wattr<float> CenterOfMass;
+  dataset_wattr<double> Coordinates;
+  dataset_wattr<float> Density;
+  dataset_wattr<float> ElectronAbundance;
+  dataset_data<float> EnergyDissipation;
+  dataset_wattr<float> GFM_AGNRadiation;
+  dataset_wattr<float> GFM_CoolingRate;
+  dataset_wattr<float> GFM_Metallicity;
+  dataset_wattr<float> GFM_Metals;
+  dataset_data<float> GFM_MetalsTagged;
+  dataset_wattr<float> GFM_WindDMVelDisp;
+  dataset_wattr<float> GFM_WindHostHaloMass;
+  dataset_wattr<float> InternalEnergy;
+  dataset_data<float> InternalEnergyOld;
+  dataset_data<float> Machnumber;
+  dataset_data<float> MagneticField;
+  dataset_data<float> MagneticFieldDivergence;
+  dataset_wattr<float> Masses;
+  dataset_wattr<float> NeutralHydrogenAbundance;
+  dataset_wattr<std::uint64_t> ParticleIDs;
+  dataset_wattr<float> Potential;
+  dataset_wattr<float> StarFormationRate;
+  dataset_wattr<float> SubfindDMDensity;
+  dataset_wattr<float> SubfindDensity;
+  dataset_wattr<float> SubfindHsml;
+  dataset_wattr<float> SubfindVelDisp;
+  dataset_wattr<float> Velocities;
 
   PartType0() : CenterOfMass("CenterOfMass"), Coordinates("Coordinates"), Density("Density"),
                 ElectronAbundance("ElectronAbundance"), EnergyDissipation("EnergyDissipation"),
@@ -325,14 +316,14 @@ struct PartType0 : public PartTypeCommon<PartType0>
 
 struct PartType1 : public PartTypeCommon<PartType1>
 {
-  dataset_wattr_named<double> Coordinates;
-  dataset_wattr_named<float> Velocities;
-  dataset_wattr_named<std::uint64_t> ParticleIDs;
-  dataset_wattr_named<float> Potential;
-  dataset_wattr_named<float> SubfindDMDensity;
-  dataset_wattr_named<float> SubfindDensity;
-  dataset_wattr_named<float> SubfindHsml;
-  dataset_wattr_named<float> SubfindVelDisp;
+  dataset_wattr<double> Coordinates;
+  dataset_wattr<float> Velocities;
+  dataset_wattr<std::uint64_t> ParticleIDs;
+  dataset_wattr<float> Potential;
+  dataset_wattr<float> SubfindDMDensity;
+  dataset_wattr<float> SubfindDensity;
+  dataset_wattr<float> SubfindHsml;
+  dataset_wattr<float> SubfindVelDisp;
 
   PartType1() : Coordinates("Coordinates"), Velocities("Velocities"), ParticleIDs("ParticleIDs"),
                 Potential("Potential"), SubfindDMDensity("SubfindDMDensity"), SubfindDensity("SubfindDensity"),
@@ -355,9 +346,9 @@ struct PartType1 : public PartTypeCommon<PartType1>
 
 struct PartType3 : public PartTypeCommon<PartType3>
 {
-  dataset_data_named<float> FluidQuantities;
-  dataset_data_named<std::uint64_t> ParentID;
-  dataset_data_named<std::uint64_t> TracerID;
+  dataset_data<float> FluidQuantities;
+  dataset_data<std::uint64_t> ParentID;
+  dataset_data<std::uint64_t> TracerID;
 
   PartType3() : FluidQuantities("FluidQuantities"), ParentID("ParentID"), TracerID("TracerID")
   {
@@ -378,24 +369,24 @@ struct PartType3 : public PartTypeCommon<PartType3>
 
 struct PartType4 : public PartTypeCommon<PartType4>
 {
-  dataset_wattr_named<float> BirthPos;
-  dataset_wattr_named<float> BirthVel;
-  dataset_wattr_named<double> Coordinates;
-  dataset_wattr_named<float> GFM_InitialMass;
-  dataset_wattr_named<float> GFM_Metallicity;
-  dataset_wattr_named<float> GFM_Metals;
-  dataset_data_named<float> GFM_MetalsTagged;
-  dataset_wattr_named<float> GFM_StellarFormationTime;
-  dataset_wattr_named<float> GFM_StellarPhotometrics;
-  dataset_wattr_named<float> Masses;
-  dataset_wattr_named<std::uint64_t> ParticleIDs;
-  dataset_wattr_named<float> Potential;
-  dataset_data_named<float> StellarHsml;
-  dataset_wattr_named<float> SubfindDMDensity;
-  dataset_wattr_named<float> SubfindDensity;
-  dataset_wattr_named<float> SubfindHsml;
-  dataset_wattr_named<float> SubfindVelDisp;
-  dataset_wattr_named<float> Velocities;
+  dataset_wattr<float> BirthPos;
+  dataset_wattr<float> BirthVel;
+  dataset_wattr<double> Coordinates;
+  dataset_wattr<float> GFM_InitialMass;
+  dataset_wattr<float> GFM_Metallicity;
+  dataset_wattr<float> GFM_Metals;
+  dataset_data<float> GFM_MetalsTagged;
+  dataset_wattr<float> GFM_StellarFormationTime;
+  dataset_wattr<float> GFM_StellarPhotometrics;
+  dataset_wattr<float> Masses;
+  dataset_wattr<std::uint64_t> ParticleIDs;
+  dataset_wattr<float> Potential;
+  dataset_data<float> StellarHsml;
+  dataset_wattr<float> SubfindDMDensity;
+  dataset_wattr<float> SubfindDensity;
+  dataset_wattr<float> SubfindHsml;
+  dataset_wattr<float> SubfindVelDisp;
+  dataset_wattr<float> Velocities;
 
   PartType4() : BirthPos("BirthPos"), BirthVel("BirthVel"), Coordinates("Coordinates"),
                 GFM_InitialMass("GFM_InitialMass"), GFM_Metallicity("GFM_Metallicity"), GFM_Metals("GFM_Metals"),
@@ -426,30 +417,30 @@ struct PartType4 : public PartTypeCommon<PartType4>
 
 struct PartType5 : public PartTypeCommon<PartType5>
 {
-  dataset_data_named<float> BH_BPressure;
-  dataset_wattr_named<float> BH_CumEgyInjection_QM;
-  dataset_wattr_named<float> BH_CumEgyInjection_RM;
-  dataset_wattr_named<float> BH_CumMassGrowth_QM;
-  dataset_wattr_named<float> BH_CumMassGrowth_RM;
-  dataset_wattr_named<float> BH_Density;
-  dataset_data_named<float> BH_HostHaloMass;
-  dataset_wattr_named<float> BH_Hsml;
-  dataset_wattr_named<float> BH_Mass;
-  dataset_wattr_named<float> BH_Mdot;
-  dataset_wattr_named<float> BH_MdotBondi;
-  dataset_wattr_named<float> BH_MdotEddington;
-  dataset_wattr_named<float> BH_Pressure;
-  dataset_wattr_named<std::uint32_t> BH_Progs;
-  dataset_wattr_named<float> BH_U;
-  dataset_wattr_named<double> Coordinates;
-  dataset_wattr_named<float> Masses;
-  dataset_wattr_named<std::uint64_t> ParticleIDs;
-  dataset_wattr_named<float> Potential;
-  dataset_wattr_named<float> SubfindDMDensity;
-  dataset_wattr_named<float> SubfindDensity;
-  dataset_wattr_named<float> SubfindHsml;
-  dataset_wattr_named<float> SubfindVelDisp;
-  dataset_wattr_named<float> Velocities;
+  dataset_data<float> BH_BPressure;
+  dataset_wattr<float> BH_CumEgyInjection_QM;
+  dataset_wattr<float> BH_CumEgyInjection_RM;
+  dataset_wattr<float> BH_CumMassGrowth_QM;
+  dataset_wattr<float> BH_CumMassGrowth_RM;
+  dataset_wattr<float> BH_Density;
+  dataset_data<float> BH_HostHaloMass;
+  dataset_wattr<float> BH_Hsml;
+  dataset_wattr<float> BH_Mass;
+  dataset_wattr<float> BH_Mdot;
+  dataset_wattr<float> BH_MdotBondi;
+  dataset_wattr<float> BH_MdotEddington;
+  dataset_wattr<float> BH_Pressure;
+  dataset_wattr<std::uint32_t> BH_Progs;
+  dataset_wattr<float> BH_U;
+  dataset_wattr<double> Coordinates;
+  dataset_wattr<float> Masses;
+  dataset_wattr<std::uint64_t> ParticleIDs;
+  dataset_wattr<float> Potential;
+  dataset_wattr<float> SubfindDMDensity;
+  dataset_wattr<float> SubfindDensity;
+  dataset_wattr<float> SubfindHsml;
+  dataset_wattr<float> SubfindVelDisp;
+  dataset_wattr<float> Velocities;
 
   PartType5() : BH_BPressure("BH_BPressure"), BH_CumEgyInjection_QM("BH_CumEgyInjection_QM"),
                 BH_CumEgyInjection_RM("BH_CumEgyInjection_RM"), BH_CumMassGrowth_QM("BH_CumMassGrowth_QM"),

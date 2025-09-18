@@ -20,7 +20,7 @@ try
     H5::H5File file(input_file.string(), H5F_ACC_RDONLY);
 
     // auto coords_ds = part0grp.openDataSet("GFM_MetalsTagged");
-    parttype0 pt0;
+    PartType5 pt0;
 
     pt0.read_from_file_1proc(file, state);
     pt0.distribute_data(state.island_comm);
