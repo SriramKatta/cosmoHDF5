@@ -38,12 +38,12 @@ struct dataset_attributes : virtual dataset_base
       return;
     }
     auto dataset = grp.openDataSet(dataset_name);
-    read_scalar_attribute(dataset, "a_scaling", a_scaling);
-    read_scalar_attribute(dataset, "h_scaling", h_scaling);
-    read_scalar_attribute(dataset, "length_scaling", length_scaling);
-    read_scalar_attribute(dataset, "mass_scaling", mass_scaling);
-    read_scalar_attribute(dataset, "to_cgs", to_cgs);
-    read_scalar_attribute(dataset, "velocity_scaling", velocity_scaling);
+    read_attribute(dataset, "a_scaling", a_scaling);
+    read_attribute(dataset, "h_scaling", h_scaling);
+    read_attribute(dataset, "length_scaling", length_scaling);
+    read_attribute(dataset, "mass_scaling", mass_scaling);
+    read_attribute(dataset, "to_cgs", to_cgs);
+    read_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
   virtual void distribute_data(const mpicpp::comm &comm) override
   {
@@ -57,12 +57,12 @@ struct dataset_attributes : virtual dataset_base
   void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const override
   {
     auto dataset = grp.openDataSet(dataset_name);
-    write_scalar_attribute(dataset, "a_scaling", a_scaling);
-    write_scalar_attribute(dataset, "h_scaling", h_scaling);
-    write_scalar_attribute(dataset, "length_scaling", length_scaling);
-    write_scalar_attribute(dataset, "mass_scaling", mass_scaling);
-    write_scalar_attribute(dataset, "to_cgs", to_cgs);
-    write_scalar_attribute(dataset, "velocity_scaling", velocity_scaling);
+    write_attribute(dataset, "a_scaling", a_scaling);
+    write_attribute(dataset, "h_scaling", h_scaling);
+    write_attribute(dataset, "length_scaling", length_scaling);
+    write_attribute(dataset, "mass_scaling", mass_scaling);
+    write_attribute(dataset, "to_cgs", to_cgs);
+    write_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
 };
 

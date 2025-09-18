@@ -12,16 +12,6 @@ DIR2=$2
 # Collect snap_099* files from DIR1
 files=("$DIR1"/snap_099*)
 
-# List of datasets to compare
-DATASETS=(
-    "/Header"
-    "/PartType0"
-    "/PartType1"
-    "/PartType3"
-    "/PartType4"
-    "/PartType5"
-)
-
 for f1 in "${files[@]}"; do
     fname=$(basename "$f1")
     f2="$DIR2/$fname"
@@ -37,6 +27,9 @@ for f1 in "${files[@]}"; do
     echo "  $f2"
     echo "=================================================="
 
+    # Dynamically get top-level groups, skipping Config/Parameters
+    DATASETS=($(h5ls -d "$f1" | awk '{print "/"$1}' | grep -Ev 'Config|Parameters'))
+
     for ds in "${DATASETS[@]}"; do
         echo "Checking $ds ..."
         diff_output=$(h5diff "$f1" "$f2" "$ds" 2>&1)
@@ -45,8 +38,8 @@ for f1 in "${files[@]}"; do
         if [ $status -eq 0 ]; then
             echo "🟢 PERFECTLY SAME: $ds (no differences listed)"
         elif [ $status -eq 1 ]; then
-            if [ "$diff_output" == "" ]; then
-                    echo "✅ DATA OKAY PASS MAYBE SOME OTHER ISSUE: $ds"       
+            if [ -z "$diff_output" ]; then
+                echo "✅ DATA OKAY PASS MAYBE SOME OTHER ISSUE: $ds"
             else
                 echo "❌ FAIL: $ds (differences found)"
                 echo "$diff_output"

@@ -31,6 +31,8 @@ struct headerfields
   std::string Git_commit;
   std::string Git_date;
 
+  headerfields() = default;
+
   headerfields(const H5::H5File &file)
   {
     read_from_file(file);
@@ -66,59 +68,45 @@ struct headerfields
 
   void read_from_file(const H5::H5File &file)
   {
-    H5::Group header = file.openGroup("/Header");
-    read_scalar_attribute(header, "BoxSize", BoxSize);
-    read_scalar_attribute(header, "Composition_vector_length", Composition_vector_length);
-    read_scalar_attribute(header, "Flag_Cooling", Flag_Cooling);
-    read_scalar_attribute(header, "Flag_DoublePrecision", Flag_DoublePrecision);
-    read_scalar_attribute(header, "Flag_Feedback", Flag_Feedback);
-    read_scalar_attribute(header, "Flag_Metals", Flag_Metals);
-    read_scalar_attribute(header, "Flag_Sfr", Flag_Sfr);
-    read_scalar_attribute(header, "Flag_StellarAge", Flag_StellarAge);
-    read_string_attribute(header, "Git_commit", Git_commit);
-    read_string_attribute(header, "Git_date", Git_date);
-    read_scalar_attribute(header, "HubbleParam", HubbleParam);
-    read_array_attribute(header, "MassTable", MassTable);
-    read_scalar_attribute(header, "NumFilesPerSnapshot", NumFilesPerSnapshot);
-    read_array_attribute(header, "NumPart_ThisFile", NumPart_ThisFile);
-    read_array_attribute(header, "NumPart_Total", NumPart_Total);
-    read_array_attribute(header, "NumPart_Total_HighWord", NumPart_Total_HighWord);
-    read_scalar_attribute(header, "Omega0", Omega0);
-    read_scalar_attribute(header, "OmegaBaryon", OmegaBaryon);
-    read_scalar_attribute(header, "OmegaLambda", OmegaLambda);
-    read_scalar_attribute(header, "Redshift", Redshift);
-    read_scalar_attribute(header, "Time", Time);
-    read_scalar_attribute(header, "UnitLength_in_cm", UnitLength_in_cm);
-    read_scalar_attribute(header, "UnitMass_in_g", UnitMass_in_g);
-    read_scalar_attribute(header, "UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
+    H5::Group header_handle = file.openGroup("/Header");
+    const_cast<headerfields *>(this)->process_attributes(header_handle, [](auto &&obj, const char *name, auto &value)
+                                                         { read_attribute(obj, name, value); });
   }
 
   void write_to_file(const H5::H5File &file) const
   {
     auto header_handle = file.createGroup("/Header");
-    write_scalar_attribute(header_handle, "BoxSize", BoxSize);
-    write_scalar_attribute(header_handle, "Composition_vector_length", Composition_vector_length);
-    write_scalar_attribute(header_handle, "Flag_Cooling", Flag_Cooling);
-    write_scalar_attribute(header_handle, "Flag_DoublePrecision", Flag_DoublePrecision);
-    write_scalar_attribute(header_handle, "Flag_Feedback", Flag_Feedback);
-    write_scalar_attribute(header_handle, "Flag_Metals", Flag_Metals);
-    write_scalar_attribute(header_handle, "Flag_Sfr", Flag_Sfr);
-    write_scalar_attribute(header_handle, "Flag_StellarAge", Flag_StellarAge);
-    write_string_attribute(header_handle, "Git_commit", Git_commit);
-    write_string_attribute(header_handle, "Git_date", Git_date);
-    write_scalar_attribute(header_handle, "HubbleParam", HubbleParam);
-    write_array_attribute(header_handle, "MassTable", MassTable);
-    write_scalar_attribute(header_handle, "NumFilesPerSnapshot", NumFilesPerSnapshot);
-    write_array_attribute(header_handle, "NumPart_ThisFile", NumPart_ThisFile);
-    write_array_attribute(header_handle, "NumPart_Total", NumPart_Total);
-    write_array_attribute(header_handle, "NumPart_Total_HighWord", NumPart_Total_HighWord);
-    write_scalar_attribute(header_handle, "Omega0", Omega0);
-    write_scalar_attribute(header_handle, "OmegaBaryon", OmegaBaryon);
-    write_scalar_attribute(header_handle, "OmegaLambda", OmegaLambda);
-    write_scalar_attribute(header_handle, "Redshift", Redshift);
-    write_scalar_attribute(header_handle, "Time", Time);
-    write_scalar_attribute(header_handle, "UnitLength_in_cm", UnitLength_in_cm);
-    write_scalar_attribute(header_handle, "UnitMass_in_g", UnitMass_in_g);
-    write_scalar_attribute(header_handle, "UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
+    const_cast<headerfields *>(this)->process_attributes(header_handle, [](auto &&obj, const char *name, const auto &value)
+                                                         { write_attribute(obj, name, value); });
+  }
+
+private:
+  template <typename Func>
+  void process_attributes(H5::Group &header_handle, Func &&f)
+  {
+    f(header_handle, "BoxSize", BoxSize);
+    f(header_handle, "Composition_vector_length", Composition_vector_length);
+    f(header_handle, "Flag_Cooling", Flag_Cooling);
+    f(header_handle, "Flag_DoublePrecision", Flag_DoublePrecision);
+    f(header_handle, "Flag_Feedback", Flag_Feedback);
+    f(header_handle, "Flag_Metals", Flag_Metals);
+    f(header_handle, "Flag_Sfr", Flag_Sfr);
+    f(header_handle, "Flag_StellarAge", Flag_StellarAge);
+    f(header_handle, "Git_commit", Git_commit);
+    f(header_handle, "Git_date", Git_date);
+    f(header_handle, "HubbleParam", HubbleParam);
+    f(header_handle, "MassTable", MassTable);
+    f(header_handle, "NumFilesPerSnapshot", NumFilesPerSnapshot);
+    f(header_handle, "NumPart_ThisFile", NumPart_ThisFile);
+    f(header_handle, "NumPart_Total", NumPart_Total);
+    f(header_handle, "NumPart_Total_HighWord", NumPart_Total_HighWord);
+    f(header_handle, "Omega0", Omega0);
+    f(header_handle, "OmegaBaryon", OmegaBaryon);
+    f(header_handle, "OmegaLambda", OmegaLambda);
+    f(header_handle, "Redshift", Redshift);
+    f(header_handle, "Time", Time);
+    f(header_handle, "UnitLength_in_cm", UnitLength_in_cm);
+    f(header_handle, "UnitMass_in_g", UnitMass_in_g);
+    f(header_handle, "UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
   }
 };
