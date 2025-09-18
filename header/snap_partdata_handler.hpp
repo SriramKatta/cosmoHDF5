@@ -183,6 +183,20 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
   }
 };
 
+template <typename T>
+struct dataset_wattr_named : dataset_wattr<T>
+{
+  std::string name;
+  dataset_wattr_named(std::string n) : name(std::move(n)) {}
+};
+
+template <typename T>
+struct dataset_data_named : dataset_data<T>
+{
+  std::string name;
+  dataset_data_named(std::string n) : name(std::move(n)) {}
+};
+
 struct PartTypeBase
 {
   virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
@@ -192,443 +206,279 @@ struct PartTypeBase
   virtual ~PartTypeBase() = default;
 };
 
-struct parttype0 : public PartTypeBase
+template <typename Derived>
+struct PartTypeCommon : PartTypeBase
 {
-  dataset_wattr<float> CenterOfMass;
-  dataset_wattr<double> Coordinates;
-  dataset_wattr<float> Density;
-  dataset_wattr<float> ElectronAbundance;
-  dataset_data<float> EnergyDissipation;
-  dataset_wattr<float> GFM_AGNRadiation;
-  dataset_wattr<float> GFM_CoolingRate;
-  dataset_wattr<float> GFM_Metallicity;
-  dataset_wattr<float> GFM_Metals;
-  dataset_data<float> GFM_MetalsTagged;
-  dataset_wattr<float> GFM_WindDMVelDisp;
-  dataset_wattr<float> GFM_WindHostHaloMass;
-  dataset_wattr<float> InternalEnergy;
-  dataset_data<float> InternalEnergyOld;
-  dataset_data<float> Machnumber;
-  dataset_data<float> MagneticField;
-  dataset_data<float> MagneticFieldDivergence;
-  dataset_wattr<float> Masses;
-  dataset_wattr<float> NeutralHydrogenAbundance;
-  dataset_wattr<std::uint64_t> ParticleIDs;
-  dataset_wattr<float> Potential;
-  dataset_wattr<float> StarFormationRate;
-  dataset_wattr<float> SubfindDMDensity;
-  dataset_wattr<float> SubfindDensity;
-  dataset_wattr<float> SubfindHsml;
-  dataset_wattr<float> SubfindVelDisp;
-  dataset_wattr<float> Velocities;
+  // child class must implement datasets() -> tuple of datasets
+
+  auto datasets() { return static_cast<Derived *>(this)->datasets(); }
+  auto datasets() const { return static_cast<const Derived *>(this)->datasets(); }
+
+  template <typename F>
+  void for_each_dataset(F &&f)
+  {
+    std::apply([&](auto &...ds)
+               { (f(ds), ...); }, datasets());
+  }
+  template <typename F>
+  void for_each_dataset(F &&f) const
+  {
+    std::apply([&](auto const &...ds)
+               { (f(ds), ...); }, datasets());
+  }
+
   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
   {
     if (state.i_rank != 0)
-    {
       return;
-    }
-    auto partgroup = file.openGroup("PartType0");
-    CenterOfMass.read_dataset_1proc(partgroup, "CenterOfMass", state.i_rank);
-    Coordinates.read_dataset_1proc(partgroup, "Coordinates", state.i_rank);
-    Density.read_dataset_1proc(partgroup, "Density", state.i_rank);
-    ElectronAbundance.read_dataset_1proc(partgroup, "ElectronAbundance", state.i_rank);
-    EnergyDissipation.read_dataset_1proc(partgroup, "EnergyDissipation", state.i_rank);
-    GFM_AGNRadiation.read_dataset_1proc(partgroup, "GFM_AGNRadiation", state.i_rank);
-    GFM_CoolingRate.read_dataset_1proc(partgroup, "GFM_CoolingRate", state.i_rank);
-    GFM_Metallicity.read_dataset_1proc(partgroup, "GFM_Metallicity", state.i_rank);
-    GFM_Metals.read_dataset_1proc(partgroup, "GFM_Metals", state.i_rank);
-    GFM_MetalsTagged.read_dataset_1proc(partgroup, "GFM_MetalsTagged", state.i_rank);
-    GFM_WindDMVelDisp.read_dataset_1proc(partgroup, "GFM_WindDMVelDisp", state.i_rank);
-    GFM_WindHostHaloMass.read_dataset_1proc(partgroup, "GFM_WindHostHaloMass", state.i_rank);
-    InternalEnergy.read_dataset_1proc(partgroup, "InternalEnergy", state.i_rank);
-    InternalEnergyOld.read_dataset_1proc(partgroup, "InternalEnergyOld", state.i_rank);
-    Machnumber.read_dataset_1proc(partgroup, "Machnumber", state.i_rank);
-    MagneticField.read_dataset_1proc(partgroup, "MagneticField", state.i_rank);
-    MagneticFieldDivergence.read_dataset_1proc(partgroup, "MagneticFieldDivergence", state.i_rank);
-    Masses.read_dataset_1proc(partgroup, "Masses", state.i_rank);
-    NeutralHydrogenAbundance.read_dataset_1proc(partgroup, "NeutralHydrogenAbundance", state.i_rank);
-    ParticleIDs.read_dataset_1proc(partgroup, "ParticleIDs", state.i_rank);
-    Potential.read_dataset_1proc(partgroup, "Potential", state.i_rank);
-    StarFormationRate.read_dataset_1proc(partgroup, "StarFormationRate", state.i_rank);
-    SubfindDMDensity.read_dataset_1proc(partgroup, "SubfindDMDensity", state.i_rank);
-    SubfindDensity.read_dataset_1proc(partgroup, "SubfindDensity", state.i_rank);
-    SubfindHsml.read_dataset_1proc(partgroup, "SubfindHsml", state.i_rank);
-    SubfindVelDisp.read_dataset_1proc(partgroup, "SubfindVelDisp", state.i_rank);
-    Velocities.read_dataset_1proc(partgroup, "Velocities", state.i_rank);
+    auto group = file.openGroup(Derived::group_name());
+    for_each_dataset([&](auto &ds)
+                     { ds.read_dataset_1proc(group, ds.name, state.i_rank); });
   }
+
   void distribute_data(const mpicpp::comm &comm) override
   {
-    CenterOfMass.distribute_data(comm);
-    Coordinates.distribute_data(comm);
-    Density.distribute_data(comm);
-    ElectronAbundance.distribute_data(comm);
-    EnergyDissipation.distribute_data(comm);
-    GFM_AGNRadiation.distribute_data(comm);
-    GFM_CoolingRate.distribute_data(comm);
-    GFM_Metallicity.distribute_data(comm);
-    GFM_Metals.distribute_data(comm);
-    GFM_MetalsTagged.distribute_data(comm);
-    GFM_WindDMVelDisp.distribute_data(comm);
-    GFM_WindHostHaloMass.distribute_data(comm);
-    InternalEnergy.distribute_data(comm);
-    InternalEnergyOld.distribute_data(comm);
-    Machnumber.distribute_data(comm);
-    MagneticField.distribute_data(comm);
-    MagneticFieldDivergence.distribute_data(comm);
-    Masses.distribute_data(comm);
-    NeutralHydrogenAbundance.distribute_data(comm);
-    ParticleIDs.distribute_data(comm);
-    Potential.distribute_data(comm);
-    StarFormationRate.distribute_data(comm);
-    SubfindDMDensity.distribute_data(comm);
-    SubfindDensity.distribute_data(comm);
-    SubfindHsml.distribute_data(comm);
-    SubfindVelDisp.distribute_data(comm);
-    Velocities.distribute_data(comm);
+    for_each_dataset([&](auto &ds)
+                     { ds.distribute_data(comm); });
   }
+
   void print() const override
   {
-    CenterOfMass.print();
-    Coordinates.print();
-    Density.print();
-    ElectronAbundance.print();
-    EnergyDissipation.print();
-    GFM_AGNRadiation.print();
-    GFM_CoolingRate.print();
-    GFM_Metallicity.print();
-    GFM_Metals.print();
-    GFM_MetalsTagged.print();
-    GFM_WindDMVelDisp.print();
-    GFM_WindHostHaloMass.print();
-    InternalEnergy.print();
-    InternalEnergyOld.print();
-    Machnumber.print();
-    MagneticField.print();
-    MagneticFieldDivergence.print();
-    Masses.print();
-    NeutralHydrogenAbundance.print();
-    ParticleIDs.print();
-    Potential.print();
-    StarFormationRate.print();
-    SubfindDMDensity.print();
-    SubfindDensity.print();
-    SubfindHsml.print();
-    SubfindVelDisp.print();
-    Velocities.print();
+    for_each_dataset([](auto const &ds)
+                     { ds.print(); });
   }
+
   void write_to_file_parallel(H5::H5File &file, const mpi_state &state) const override
   {
-    auto partgroup = file.createGroup("PartType0");
-    CenterOfMass.write_to_file_parallel(partgroup, "CenterOfMass", state.island_comm);
-    Coordinates.write_to_file_parallel(partgroup, "Coordinates", state.island_comm);
-    Density.write_to_file_parallel(partgroup, "Density", state.island_comm);
-    ElectronAbundance.write_to_file_parallel(partgroup, "ElectronAbundance", state.island_comm);
-    EnergyDissipation.write_to_file_parallel(partgroup, "EnergyDissipation", state.island_comm);
-    GFM_AGNRadiation.write_to_file_parallel(partgroup, "GFM_AGNRadiation", state.island_comm);
-    GFM_CoolingRate.write_to_file_parallel(partgroup, "GFM_CoolingRate", state.island_comm);
-    GFM_Metallicity.write_to_file_parallel(partgroup, "GFM_Metallicity", state.island_comm);
-    GFM_Metals.write_to_file_parallel(partgroup, "GFM_Metals", state.island_comm);
-    GFM_MetalsTagged.write_to_file_parallel(partgroup, "GFM_MetalsTagged", state.island_comm);
-    GFM_WindDMVelDisp.write_to_file_parallel(partgroup, "GFM_WindDMVelDisp", state.island_comm);
-    GFM_WindHostHaloMass.write_to_file_parallel(partgroup, "GFM_WindHostHaloMass", state.island_comm);
-    InternalEnergy.write_to_file_parallel(partgroup, "InternalEnergy", state.island_comm);
-    InternalEnergyOld.write_to_file_parallel(partgroup, "InternalEnergyOld", state.island_comm);
-    Machnumber.write_to_file_parallel(partgroup, "Machnumber", state.island_comm);
-    MagneticField.write_to_file_parallel(partgroup, "MagneticField", state.island_comm);
-    MagneticFieldDivergence.write_to_file_parallel(partgroup, "MagneticFieldDivergence", state.island_comm);
-    Masses.write_to_file_parallel(partgroup, "Masses", state.island_comm);
-    NeutralHydrogenAbundance.write_to_file_parallel(partgroup, "NeutralHydrogenAbundance", state.island_comm);
-    ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs", state.island_comm);
-    Potential.write_to_file_parallel(partgroup, "Potential", state.island_comm);
-    StarFormationRate.write_to_file_parallel(partgroup, "StarFormationRate", state.island_comm);
-    SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity", state.island_comm);
-    SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity", state.island_comm);
-    SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml", state.island_comm);
-    SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp", state.island_comm);
-    Velocities.write_to_file_parallel(partgroup, "Velocities", state.island_comm);
+    auto group = file.createGroup(Derived::group_name());
+    for_each_dataset([&](auto const &ds)
+                     { ds.write_to_file_parallel(group, ds.name, state.island_comm); });
   }
 };
 
-// struct parttype1 : public PartTypeBase
-// {
-//   dataset_wattr<double> Coordinates;
-//   dataset_wattr<float> Velocities;
-//   dataset_wattr<std::uint64_t> ParticleIDs;
-//   dataset_wattr<float> Potential;
-//   dataset_wattr<float> SubfindDMDensity;
-//   dataset_wattr<float> SubfindDensity;
-//   dataset_wattr<float> SubfindHsml;
-//   dataset_wattr<float> SubfindVelDisp;
-//   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
-//   {
-//     if (state.i_rank == 0)
-//     {
-//       auto partgroup = file.openGroup("PartType1");
-//       Coordinates.read_from_file_1proc(partgroup, "Coordinates");
-//       ParticleIDs.read_from_file_1proc(partgroup, "ParticleIDs");
-//       Potential.read_from_file_1proc(partgroup, "Potential");
-//       SubfindDMDensity.read_from_file_1proc(partgroup, "SubfindDMDensity");
-//       SubfindDensity.read_from_file_1proc(partgroup, "SubfindDensity");
-//       SubfindHsml.read_from_file_1proc(partgroup, "SubfindHsml");
-//       SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
-//       Velocities.read_from_file_1proc(partgroup, "Velocities");
-//     }
-//   }
-//   void print() const override
-//   {
-//     Coordinates.print();
-//     ParticleIDs.print();
-//     Potential.print();
-//     SubfindDMDensity.print();
-//     SubfindDensity.print();
-//     SubfindHsml.print();
-//     SubfindVelDisp.print();
-//     Velocities.print();
-//   }
-//   void write_to_file_parallel(H5::H5File &file) const override
-//   {
-//     auto partgroup = file.createGroup("PartType1");
-//     Coordinates.write_to_file_parallel(partgroup, "Coordinates");
-//     ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs");
-//     Potential.write_to_file_parallel(partgroup, "Potential");
-//     SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity");
-//     SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity");
-//     SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml");
-//     SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp");
-//     Velocities.write_to_file_parallel(partgroup, "Velocities");
-//   }
-// };
+struct PartType0 : public PartTypeCommon<PartType0>
+{
+  dataset_wattr_named<float> CenterOfMass;
+  dataset_wattr_named<double> Coordinates;
+  dataset_wattr_named<float> Density;
+  dataset_wattr_named<float> ElectronAbundance;
+  dataset_data_named<float> EnergyDissipation;
+  dataset_wattr_named<float> GFM_AGNRadiation;
+  dataset_wattr_named<float> GFM_CoolingRate;
+  dataset_wattr_named<float> GFM_Metallicity;
+  dataset_wattr_named<float> GFM_Metals;
+  dataset_data_named<float> GFM_MetalsTagged;
+  dataset_wattr_named<float> GFM_WindDMVelDisp;
+  dataset_wattr_named<float> GFM_WindHostHaloMass;
+  dataset_wattr_named<float> InternalEnergy;
+  dataset_data_named<float> InternalEnergyOld;
+  dataset_data_named<float> Machnumber;
+  dataset_data_named<float> MagneticField;
+  dataset_data_named<float> MagneticFieldDivergence;
+  dataset_wattr_named<float> Masses;
+  dataset_wattr_named<float> NeutralHydrogenAbundance;
+  dataset_wattr_named<std::uint64_t> ParticleIDs;
+  dataset_wattr_named<float> Potential;
+  dataset_wattr_named<float> StarFormationRate;
+  dataset_wattr_named<float> SubfindDMDensity;
+  dataset_wattr_named<float> SubfindDensity;
+  dataset_wattr_named<float> SubfindHsml;
+  dataset_wattr_named<float> SubfindVelDisp;
+  dataset_wattr_named<float> Velocities;
 
-// struct parttype3 : public PartTypeBase
-// {
-//   dataset_data<float> FluidQuantities;
-//   dataset_data<std::uint64_t> ParentID;
-//   dataset_data<std::uint64_t> TracerID;
-//   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
-//   {
-//     if (state.i_rank == 0)
-//     {
-//       auto partgroup = file.openGroup("PartType1");
-//       FluidQuantities.read_from_file_1proc(partgroup, "FluidQuantities");
-//       ParentID.read_from_file_1proc(partgroup, "ParentID");
-//       TracerID.read_from_file_1proc(partgroup, "TracerID");
-//     }
-//   }
-//   void print() const override
-//   {
-//     FluidQuantities.print();
-//     ParentID.print();
-//     TracerID.print();
-//   }
-//   void write_to_file_parallel(H5::H5File &file) const override
-//   {
-//     auto partgroup = file.createGroup("PartType3");
-//     FluidQuantities.write_to_file_parallel(partgroup, "FluidQuantities");
-//     ParentID.write_to_file_parallel(partgroup, "ParentID");
-//     TracerID.write_to_file_parallel(partgroup, "TracerID");
-//   }
-// };
+  PartType0() : CenterOfMass("CenterOfMass"), Coordinates("Coordinates"), Density("Density"),
+                ElectronAbundance("ElectronAbundance"), EnergyDissipation("EnergyDissipation"),
+                GFM_AGNRadiation("GFM_AGNRadiation"), GFM_CoolingRate("GFM_CoolingRate"),
+                GFM_Metallicity("GFM_Metallicity"), GFM_Metals("GFM_Metals"), GFM_MetalsTagged("GFM_MetalsTagged"),
+                GFM_WindDMVelDisp("GFM_WindDMVelDisp"), GFM_WindHostHaloMass("GFM_WindHostHaloMass"),
+                InternalEnergy("InternalEnergy"), InternalEnergyOld("InternalEnergyOld"), Machnumber("Machnumber"),
+                MagneticField("MagneticField"), MagneticFieldDivergence("MagneticFieldDivergence"),
+                Masses("Masses"), NeutralHydrogenAbundance("NeutralHydrogenAbundance"),
+                ParticleIDs("ParticleIDs"), Potential("Potential"), StarFormationRate("StarFormationRate"),
+                SubfindDMDensity("SubfindDMDensity"), SubfindDensity("SubfindDensity"),
+                SubfindHsml("SubfindHsml"), SubfindVelDisp("SubfindVelDisp"), Velocities("Velocities")
+  {
+  }
 
-// struct parttype4 : public PartTypeBase
-// {
-//   dataset_wattr<float> BirthPos;
-//   dataset_wattr<float> BirthVel;
-//   dataset_wattr<double> Coordinates;
-//   dataset_wattr<float> GFM_InitialMass;
-//   dataset_wattr<float> GFM_Metallicity;
-//   dataset_wattr<float> GFM_Metals;
-//   dataset_data<float> GFM_MetalsTagged;
-//   dataset_wattr<float> GFM_StellarFormationTime;
-//   dataset_wattr<float> GFM_StellarPhotometrics;
-//   dataset_wattr<float> Masses;
-//   dataset_wattr<std::uint64_t> ParticleIDs;
-//   dataset_wattr<float> Potential;
-//   dataset_data<float> StellarHsml;
-//   dataset_wattr<float> SubfindDMDensity;
-//   dataset_wattr<float> SubfindDensity;
-//   dataset_wattr<float> SubfindHsml;
-//   dataset_wattr<float> SubfindVelDisp;
-//   dataset_wattr<float> Velocities;
-//   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
-//   {
-//     if (state.i_rank == 0)
-//     {
-//       auto partgroup = file.openGroup("PartType4");
-//       BirthPos.read_from_file_1proc(partgroup, "BirthPos");
-//       BirthVel.read_from_file_1proc(partgroup, "BirthVel");
-//       Coordinates.read_from_file_1proc(partgroup, "Coordinates");
-//       GFM_InitialMass.read_from_file_1proc(partgroup, "GFM_InitialMass");
-//       GFM_Metallicity.read_from_file_1proc(partgroup, "GFM_Metallicity");
-//       GFM_Metals.read_from_file_1proc(partgroup, "GFM_Metals");
-//       GFM_MetalsTagged.read_from_file_1proc(partgroup, "GFM_MetalsTagged");
-//       GFM_StellarFormationTime.read_from_file_1proc(partgroup, "GFM_StellarFormationTime");
-//       GFM_StellarPhotometrics.read_from_file_1proc(partgroup, "GFM_StellarPhotometrics");
-//       Masses.read_from_file_1proc(partgroup, "Masses");
-//       ParticleIDs.read_from_file_1proc(partgroup, "ParticleIDs");
-//       Potential.read_from_file_1proc(partgroup, "Potential");
-//       StellarHsml.read_from_file_1proc(partgroup, "StellarHsml");
-//       SubfindDMDensity.read_from_file_1proc(partgroup, "SubfindDMDensity");
-//       SubfindDensity.read_from_file_1proc(partgroup, "SubfindDensity");
-//       SubfindHsml.read_from_file_1proc(partgroup, "SubfindHsml");
-//       SubfindVelDisp.read_from_file_1proc(partgroup, "SubfindVelDisp");
-//       Velocities.read_from_file_1proc(partgroup, "Velocities");
-//     }
-//   }
-//   void print() const override
-//   {
-//     BirthPos.print();
-//     BirthVel;
-//     Coordinates.print();
-//     GFM_InitialMass.print();
-//     GFM_Metallicity.print();
-//     GFM_Metals;
-//     GFM_MetalsTagged.print();
-//     GFM_StellarFormationTime.print();
-//     GFM_StellarPhotometrics.print();
-//     Masses;
-//     ParticleIDs.print();
-//     Potential;
-//     StellarHsml.print();
-//     SubfindDMDensity.print();
-//     SubfindDensity.print();
-//     SubfindHsml.print();
-//     SubfindVelDisp.print();
-//     Velocities.print();
-//   }
-//   void write_to_file_parallel(H5::H5File &file) const override
-//   {
-//     auto partgroup = file.createGroup("PartType4");
-//     BirthPos.write_to_file_parallel(partgroup, "BirthPos");
-//     BirthVel.write_to_file_parallel(partgroup, "BirthVel");
-//     Coordinates.write_to_file_parallel(partgroup, "Coordinates");
-//     GFM_InitialMass.write_to_file_parallel(partgroup, "GFM_InitialMass");
-//     GFM_Metallicity.write_to_file_parallel(partgroup, "GFM_Metallicity");
-//     GFM_Metals.write_to_file_parallel(partgroup, "GFM_Metals");
-//     GFM_MetalsTagged.write_to_file_parallel(partgroup, "GFM_MetalsTagged");
-//     GFM_StellarFormationTime.write_to_file_parallel(partgroup, "GFM_StellarFormationTime");
-//     GFM_StellarPhotometrics.write_to_file_parallel(partgroup, "GFM_StellarPhotometrics");
-//     Masses.write_to_file_parallel(partgroup, "Masses");
-//     ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs");
-//     Potential.write_to_file_parallel(partgroup, "Potential");
-//     StellarHsml.write_to_file_parallel(partgroup, "StellarHsml");
-//     SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity");
-//     SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity");
-//     SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml");
-//     SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp");
-//     Velocities.write_to_file_parallel(partgroup, "Velocities");
-//   }
-// };
+  static const char *group_name() { return "PartType0"; }
 
-// struct parttype5 : public PartTypeBase
-// {
-//   dataset_data<float> BH_BPressure;
-//   dataset_wattr<float> BH_CumEgyInjection_QM;
-//   dataset_wattr<float> BH_CumEgyInjection_RM;
-//   dataset_wattr<float> BH_CumMassGrowth_QM;
-//   dataset_wattr<float> BH_CumMassGrowth_RM;
-//   dataset_wattr<float> BH_Density;
-//   dataset_data<float> BH_HostHaloMass;
-//   dataset_wattr<float> BH_Hsml;
-//   dataset_wattr<float> BH_Mass;
-//   dataset_wattr<float> BH_Mdot;
-//   dataset_wattr<float> BH_MdotBondi;
-//   dataset_wattr<float> BH_MdotEddington;
-//   dataset_wattr<float> BH_Pressure;
-//   dataset_wattr<std::uint32_t> BH_Progs;
-//   dataset_wattr<float> BH_U;
-//   dataset_wattr<double> Coordinates;
-//   dataset_wattr<float> Masses;
-//   dataset_wattr<std::uint64_t> ParticleIDs;
-//   dataset_wattr<float> Potential;
-//   dataset_wattr<float> SubfindDMDensity;
-//   dataset_wattr<float> SubfindDensity;
-//   dataset_wattr<float> SubfindHsml;
-//   dataset_wattr<float> SubfindVelDisp;
-//   dataset_wattr<float> Velocities;
-//   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
-//   {
-//     if (state.i_rank == 0)
-//     {
-//       auto partgrp = file.openGroup("PartType5");
-//       BH_BPressure.read_from_file_1proc(partgrp, "BH_BPressure");
-//       BH_CumEgyInjection_QM.read_from_file_1proc(partgrp, "BH_CumEgyInjection_QM");
-//       BH_CumEgyInjection_RM.read_from_file_1proc(partgrp, "BH_CumEgyInjection_RM");
-//       BH_CumMassGrowth_QM.read_from_file_1proc(partgrp, "BH_CumMassGrowth_QM");
-//       BH_CumMassGrowth_RM.read_from_file_1proc(partgrp, "BH_CumMassGrowth_RM");
-//       BH_Density.read_from_file_1proc(partgrp, "BH_Density");
-//       BH_HostHaloMass.read_from_file_1proc(partgrp, "BH_HostHaloMass");
-//       BH_Hsml.read_from_file_1proc(partgrp, "BH_Hsml");
-//       BH_Mass.read_from_file_1proc(partgrp, "BH_Mass");
-//       BH_Mdot.read_from_file_1proc(partgrp, "BH_Mdot");
-//       BH_MdotBondi.read_from_file_1proc(partgrp, "BH_MdotBondi");
-//       BH_MdotEddington.read_from_file_1proc(partgrp, "BH_MdotEddington");
-//       BH_Pressure.read_from_file_1proc(partgrp, "BH_Pressure");
-//       BH_Progs.read_from_file_1proc(partgrp, "BH_Progs");
-//       BH_U.read_from_file_1proc(partgrp, "BH_U");
-//       Coordinates.read_from_file_1proc(partgrp, "Coordinates");
-//       Masses.read_from_file_1proc(partgrp, "Masses");
-//       ParticleIDs.read_from_file_1proc(partgrp, "ParticleIDs");
-//       Potential.read_from_file_1proc(partgrp, "Potential");
-//       SubfindDMDensity.read_from_file_1proc(partgrp, "SubfindDMDensity");
-//       SubfindDensity.read_from_file_1proc(partgrp, "SubfindDensity");
-//       SubfindHsml.read_from_file_1proc(partgrp, "SubfindHsml");
-//       SubfindVelDisp.read_from_file_1proc(partgrp, "SubfindVelDisp");
-//       Velocities.read_from_file_1proc(partgrp, "Velocities");
-//     }
-//   }
-//   void print() const override
-//   {
-//     BH_BPressure.print();
-//     BH_CumEgyInjection_QM.print();
-//     BH_CumEgyInjection_RM.print();
-//     BH_CumMassGrowth_QM.print();
-//     BH_CumMassGrowth_RM.print();
-//     BH_Density.print();
-//     BH_HostHaloMass.print();
-//     BH_Hsml.print();
-//     BH_Mass.print();
-//     BH_Mdot.print();
-//     BH_MdotBondi.print();
-//     BH_MdotEddington.print();
-//     BH_Pressure.print();
-//     BH_Progs.print();
-//     BH_U.print();
-//     Coordinates.print();
-//     Masses.print();
-//     ParticleIDs.print();
-//     Potential.print();
-//     SubfindDMDensity.print();
-//     SubfindDensity.print();
-//     SubfindHsml.print();
-//     SubfindVelDisp.print();
-//     Velocities.print();
-//   }
-//   void write_to_file_parallel(H5::H5File &file) const override
-//   {
-//     auto partgroup = file.createGroup("PartType5");
-//     BH_BPressure.write_to_file_parallel(partgroup, "BH_BPressure");
-//     BH_CumEgyInjection_QM.write_to_file_parallel(partgroup, "BH_CumEgyInjection_QM");
-//     BH_CumEgyInjection_RM.write_to_file_parallel(partgroup, "BH_CumEgyInjection_RM");
-//     BH_CumMassGrowth_QM.write_to_file_parallel(partgroup, "BH_CumMassGrowth_QM");
-//     BH_CumMassGrowth_RM.write_to_file_parallel(partgroup, "BH_CumMassGrowth_RM");
-//     BH_Density.write_to_file_parallel(partgroup, "BH_Density");
-//     BH_HostHaloMass.write_to_file_parallel(partgroup, "BH_HostHaloMass");
-//     BH_Hsml.write_to_file_parallel(partgroup, "BH_Hsml");
-//     BH_Mass.write_to_file_parallel(partgroup, "BH_Mass");
-//     BH_Mdot.write_to_file_parallel(partgroup, "BH_Mdot");
-//     BH_MdotBondi.write_to_file_parallel(partgroup, "BH_MdotBondi");
-//     BH_MdotEddington.write_to_file_parallel(partgroup, "BH_MdotEddington");
-//     BH_Pressure.write_to_file_parallel(partgroup, "BH_Pressure");
-//     BH_Progs.write_to_file_parallel(partgroup, "BH_Progs");
-//     BH_U.write_to_file_parallel(partgroup, "BH_U");
-//     Coordinates.write_to_file_parallel(partgroup, "Coordinates");
-//     Masses.write_to_file_parallel(partgroup, "Masses");
-//     ParticleIDs.write_to_file_parallel(partgroup, "ParticleIDs");
-//     Potential.write_to_file_parallel(partgroup, "Potential");
-//     SubfindDMDensity.write_to_file_parallel(partgroup, "SubfindDMDensity");
-//     SubfindDensity.write_to_file_parallel(partgroup, "SubfindDensity");
-//     SubfindHsml.write_to_file_parallel(partgroup, "SubfindHsml");
-//     SubfindVelDisp.write_to_file_parallel(partgroup, "SubfindVelDisp");
-//     Velocities.write_to_file_parallel(partgroup, "Velocities");
-//   }
-// };
+  auto datasets()
+  {
+    return std::tie(CenterOfMass, Coordinates, Density, ElectronAbundance, EnergyDissipation,
+                    GFM_AGNRadiation, GFM_CoolingRate, GFM_Metallicity, GFM_Metals, GFM_MetalsTagged,
+                    GFM_WindDMVelDisp, GFM_WindHostHaloMass, InternalEnergy, InternalEnergyOld, Machnumber,
+                    MagneticField, MagneticFieldDivergence, Masses, NeutralHydrogenAbundance,
+                    ParticleIDs, Potential, StarFormationRate, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+
+  auto datasets() const
+  {
+    return std::tie(CenterOfMass, Coordinates, Density, ElectronAbundance, EnergyDissipation,
+                    GFM_AGNRadiation, GFM_CoolingRate, GFM_Metallicity, GFM_Metals, GFM_MetalsTagged,
+                    GFM_WindDMVelDisp, GFM_WindHostHaloMass, InternalEnergy, InternalEnergyOld, Machnumber,
+                    MagneticField, MagneticFieldDivergence, Masses, NeutralHydrogenAbundance,
+                    ParticleIDs, Potential, StarFormationRate, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+};
+
+struct PartType1 : public PartTypeCommon<PartType1>
+{
+  dataset_wattr_named<double> Coordinates;
+  dataset_wattr_named<float> Velocities;
+  dataset_wattr_named<std::uint64_t> ParticleIDs;
+  dataset_wattr_named<float> Potential;
+  dataset_wattr_named<float> SubfindDMDensity;
+  dataset_wattr_named<float> SubfindDensity;
+  dataset_wattr_named<float> SubfindHsml;
+  dataset_wattr_named<float> SubfindVelDisp;
+
+  PartType1() : Coordinates("Coordinates"), Velocities("Velocities"), ParticleIDs("ParticleIDs"),
+                Potential("Potential"), SubfindDMDensity("SubfindDMDensity"), SubfindDensity("SubfindDensity"),
+                SubfindHsml("SubfindHsml"), SubfindVelDisp("SubfindVelDisp")
+  {
+  }
+
+  static const char *group_name() { return "PartType1"; }
+  auto datasets()
+  {
+    return std::tie(Coordinates, Velocities, ParticleIDs, Potential,
+                    SubfindDMDensity, SubfindDensity, SubfindHsml, SubfindVelDisp);
+  }
+  auto datasets() const
+  {
+    return std::tie(Coordinates, Velocities, ParticleIDs, Potential,
+                    SubfindDMDensity, SubfindDensity, SubfindHsml, SubfindVelDisp);
+  }
+};
+
+struct PartType3 : public PartTypeCommon<PartType3>
+{
+  dataset_data_named<float> FluidQuantities;
+  dataset_data_named<std::uint64_t> ParentID;
+  dataset_data_named<std::uint64_t> TracerID;
+
+  PartType3() : FluidQuantities("FluidQuantities"), ParentID("ParentID"), TracerID("TracerID")
+  {
+  }
+
+  static const char *group_name() { return "PartType3"; }
+
+  auto datasets()
+  {
+    return std::tie(FluidQuantities, ParentID, TracerID);
+  }
+
+  auto datasets() const
+  {
+    return std::tie(FluidQuantities, ParentID, TracerID);
+  }
+};
+
+struct PartType4 : public PartTypeCommon<PartType4>
+{
+  dataset_wattr_named<float> BirthPos;
+  dataset_wattr_named<float> BirthVel;
+  dataset_wattr_named<double> Coordinates;
+  dataset_wattr_named<float> GFM_InitialMass;
+  dataset_wattr_named<float> GFM_Metallicity;
+  dataset_wattr_named<float> GFM_Metals;
+  dataset_data_named<float> GFM_MetalsTagged;
+  dataset_wattr_named<float> GFM_StellarFormationTime;
+  dataset_wattr_named<float> GFM_StellarPhotometrics;
+  dataset_wattr_named<float> Masses;
+  dataset_wattr_named<std::uint64_t> ParticleIDs;
+  dataset_wattr_named<float> Potential;
+  dataset_data_named<float> StellarHsml;
+  dataset_wattr_named<float> SubfindDMDensity;
+  dataset_wattr_named<float> SubfindDensity;
+  dataset_wattr_named<float> SubfindHsml;
+  dataset_wattr_named<float> SubfindVelDisp;
+  dataset_wattr_named<float> Velocities;
+
+  PartType4() : BirthPos("BirthPos"), BirthVel("BirthVel"), Coordinates("Coordinates"),
+                GFM_InitialMass("GFM_InitialMass"), GFM_Metallicity("GFM_Metallicity"), GFM_Metals("GFM_Metals"),
+                GFM_MetalsTagged("GFM_MetalsTagged"), GFM_StellarFormationTime("GFM_StellarFormationTime"),
+                GFM_StellarPhotometrics("GFM_StellarPhotometrics"), Masses("Masses"), ParticleIDs("ParticleIDs"),
+                Potential("Potential"), StellarHsml("StellarHsml"), SubfindDMDensity("SubfindDMDensity"),
+                SubfindDensity("SubfindDensity"), SubfindHsml("SubfindHsml"), SubfindVelDisp("SubfindVelDisp"),
+                Velocities("Velocities")
+  {
+  }
+
+  static const char *group_name() { return "PartType4"; }
+  auto datasets()
+  {
+    return std::tie(BirthPos, BirthVel, Coordinates, GFM_InitialMass, GFM_Metallicity, GFM_Metals,
+                    GFM_MetalsTagged, GFM_StellarFormationTime, GFM_StellarPhotometrics, Masses,
+                    ParticleIDs, Potential, StellarHsml, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+  auto datasets() const
+  {
+    return std::tie(BirthPos, BirthVel, Coordinates, GFM_InitialMass, GFM_Metallicity, GFM_Metals,
+                    GFM_MetalsTagged, GFM_StellarFormationTime, GFM_StellarPhotometrics, Masses,
+                    ParticleIDs, Potential, StellarHsml, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+};
+
+struct PartType5 : public PartTypeCommon<PartType5>
+{
+  dataset_data_named<float> BH_BPressure;
+  dataset_wattr_named<float> BH_CumEgyInjection_QM;
+  dataset_wattr_named<float> BH_CumEgyInjection_RM;
+  dataset_wattr_named<float> BH_CumMassGrowth_QM;
+  dataset_wattr_named<float> BH_CumMassGrowth_RM;
+  dataset_wattr_named<float> BH_Density;
+  dataset_data_named<float> BH_HostHaloMass;
+  dataset_wattr_named<float> BH_Hsml;
+  dataset_wattr_named<float> BH_Mass;
+  dataset_wattr_named<float> BH_Mdot;
+  dataset_wattr_named<float> BH_MdotBondi;
+  dataset_wattr_named<float> BH_MdotEddington;
+  dataset_wattr_named<float> BH_Pressure;
+  dataset_wattr_named<std::uint32_t> BH_Progs;
+  dataset_wattr_named<float> BH_U;
+  dataset_wattr_named<double> Coordinates;
+  dataset_wattr_named<float> Masses;
+  dataset_wattr_named<std::uint64_t> ParticleIDs;
+  dataset_wattr_named<float> Potential;
+  dataset_wattr_named<float> SubfindDMDensity;
+  dataset_wattr_named<float> SubfindDensity;
+  dataset_wattr_named<float> SubfindHsml;
+  dataset_wattr_named<float> SubfindVelDisp;
+  dataset_wattr_named<float> Velocities;
+
+  PartType5() : BH_BPressure("BH_BPressure"), BH_CumEgyInjection_QM("BH_CumEgyInjection_QM"),
+                BH_CumEgyInjection_RM("BH_CumEgyInjection_RM"), BH_CumMassGrowth_QM("BH_CumMassGrowth_QM"),
+                BH_CumMassGrowth_RM("BH_CumMassGrowth_RM"), BH_Density("BH_Density"), BH_HostHaloMass("BH_HostHaloMass"),
+                BH_Hsml("BH_Hsml"), BH_Mass("BH_Mass"), BH_Mdot("BH_Mdot"), BH_MdotBondi("BH_MdotBondi"),
+                BH_MdotEddington("BH_MdotEddington"), BH_Pressure("BH_Pressure"), BH_Progs("BH_Progs"),
+                BH_U("BH_U"), Coordinates("Coordinates"), Masses("Masses"), ParticleIDs("ParticleIDs"),
+                Potential("Potential"), SubfindDMDensity("SubfindDMDensity"), SubfindDensity("SubfindDensity"),
+                SubfindHsml("SubfindHsml"), SubfindVelDisp("SubfindVelDisp"), Velocities("Velocities")
+  {
+  }
+
+  static const char *group_name() { return "PartType5"; }
+
+  auto datasets()
+  {
+    return std::tie(BH_BPressure, BH_CumEgyInjection_QM, BH_CumEgyInjection_RM, BH_CumMassGrowth_QM,
+                    BH_CumMassGrowth_RM, BH_Density, BH_HostHaloMass, BH_Hsml, BH_Mass, BH_Mdot,
+                    BH_MdotBondi, BH_MdotEddington, BH_Pressure, BH_Progs, BH_U, Coordinates,
+                    Masses, ParticleIDs, Potential, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+
+  auto datasets() const
+  {
+    return std::tie(BH_BPressure, BH_CumEgyInjection_QM, BH_CumEgyInjection_RM, BH_CumMassGrowth_QM,
+                    BH_CumMassGrowth_RM, BH_Density, BH_HostHaloMass, BH_Hsml, BH_Mass, BH_Mdot,
+                    BH_MdotBondi, BH_MdotEddington, BH_Pressure, BH_Progs, BH_U, Coordinates,
+                    Masses, ParticleIDs, Potential, SubfindDMDensity, SubfindDensity,
+                    SubfindHsml, SubfindVelDisp, Velocities);
+  }
+};
