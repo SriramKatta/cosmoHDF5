@@ -8,4 +8,4 @@ add_subdirectory(newcode_data_check)
 
 
 
-# add_subdirectory(final_proj_code)
+add_subdirectory(final_proj_code)

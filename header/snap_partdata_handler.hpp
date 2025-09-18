@@ -3,6 +3,8 @@
 #include "attribute_helper.hpp"
 #include "general_utils.hpp"
 
+#include <numeric>
+
 struct dataset_base
 {
   virtual void read_dataset_1proc(const H5::Group &, const std::string &, const int) = 0;
