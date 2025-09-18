@@ -43,12 +43,15 @@ try
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
 
   auto read_file = H5::H5File(ifname, H5F_ACC_RDONLY);
+  auto rgrp = read_file.openGroup("/Header");
 
-  header_group header_data(read_file);
+  header_group header_data;
+
+  header_data.read_from_group(rgrp);
 
   auto writefile = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
-
-  header_data.write_to_file(writefile);
+  auto GRP = writefile.openGroup("/Header");
+  header_data.write_to_group(GRP);
 
   return EXIT_SUCCESS;
 }
