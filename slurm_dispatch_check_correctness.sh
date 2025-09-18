@@ -23,13 +23,13 @@ if [ ! -d "$TNG_DIR" ]; then
 fi
 
 
-sbatch --nodes=2 run_finalexe.sh "${TNG_DIR}/TNG100n455Dark/"
+sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n455Dark/"
 
-sbatch --nodes=2 run_finalexe.sh "${TNG_DIR}/TNG100n455/"
+sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n455/"
 
-sbatch --nodes=2 run_finalexe.sh "${TNG_DIR}/TNG100n910Dark/"
+sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n910Dark/"
 
-sbatch --nodes=2 run_finalexe.sh "${TNG_DIR}/TNG100n910/"
+sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "${TNG_DIR}/TNG100n910/"
 
 sbatch --nodes=4 run_finalexe.sh "${TNG_DIR}/TNG100n1820Dark/"
 
