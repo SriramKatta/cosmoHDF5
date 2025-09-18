@@ -29,7 +29,6 @@ try
   config_group dconfig;
   header.read_from_file(in_file);
   dconfig.read_from_file(in_file);
-  dconfig.print();
   // header.print();
   // std::array<PartTypeBase *, 6> pts{};
   // if (header.NumPart_Total[0] > 0)
