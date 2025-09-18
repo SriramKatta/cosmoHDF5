@@ -28,7 +28,7 @@ for f1 in "${files[@]}"; do
     echo "=================================================="
 
     # Dynamically get top-level groups, skipping Config/Parameters
-    DATASETS=($(h5ls -d "$f1" | awk '{print "/"$1}' | grep -Ev 'Config|Parameters'))
+    DATASETS=($(h5ls -d "$f1" | awk '{print "/"$1}' | grep -Ev 'Parameters'))
 
     for ds in "${DATASETS[@]}"; do
         echo "Checking $ds ..."
