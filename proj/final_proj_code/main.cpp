@@ -24,26 +24,37 @@ try
   param_group params;
   part_groups parts;
 
-  header.read_from_file(in_file);
+  // Step 1: read input on rank 0
+  DURATION_MEASURE(read_1_proc, state.island_comm, state.world_comm,
+                   header.read_from_file(in_file);
+                   dconfig.read_from_file(in_file);
+                   params.read_from_file(in_file);
+                   parts.setup(header);
+                   parts.read_from_file_1proc(in_file, state););
 
-  dconfig.read_from_file(in_file);
-
-  params.read_from_file(in_file);
-
-  parts.setup(header);
-  parts.read_from_file_1proc(in_file, state);
-
-  parts.distribute_data(state.island_comm);
-
+  // Step 2: distribute data to all ranks
+  DURATION_MEASURE(scatter_data, state.island_comm, state.world_comm,
+                   parts.distribute_data(state.island_comm););
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   auto outfile = create_parallel_file_with_groups(out_file_dir, state);
 
   // Step 3: write output in parallel
-  params.write_to_file(outfile);
-  header.write_to_file(outfile);
-  dconfig.write_to_file(outfile);
-  parts.write_to_file_parallel(outfile, state);
+  DURATION_MEASURE(write_parallel, state.island_comm, state.world_comm,
+                   params.write_to_file(outfile);
+                   header.write_to_file(outfile);
+                   dconfig.write_to_file(outfile);
+                   parts.write_to_file_parallel(outfile, state););
 
+  state.world_comm.iallreduce(&read_1_proc, 1, mpicpp::op::max());
+  state.world_comm.iallreduce(&scatter_data, 1, mpicpp::op::max());
+  state.world_comm.iallreduce(&write_parallel, 1, mpicpp::op::max());
+  int minimun_rank_perisland{};
+  state.world_comm.iallreduce(&state.i_size, &minimun_rank_perisland, 1, mpicpp::op::min());
+
+  if (state.w_rank == 0)
+  {
+    fmt::print("{:d},{:4.3f},{:4.3f},{:4.3f}\n", minimun_rank_perisland, read_1_proc, scatter_data, write_parallel);
+  }
   return 0;
 }
 catch (...)
