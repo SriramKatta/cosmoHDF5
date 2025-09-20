@@ -42,7 +42,7 @@ for ((ranks=$count; ranks<=MAX_CORES; ranks+=count)); do
     
     for i in $(seq 1 $NUM_RUNS); do
         echo -n "   Run $i ..."
-        srun -N 1 -n $ranks ./build/bin/final "$INPUT_DIR" \
+        srun -N ${SLURM_NNODES} -n $ranks ./build/bin/final "$INPUT_DIR" \
         | awk -v r=$ranks -v run=$i -F, '{print r","run","$0}' | tee -a "$CSV_FILE"
     done
 done

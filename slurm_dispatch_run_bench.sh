@@ -24,3 +24,6 @@ sbatch --nodes=4 --time=4:30:0 ./run_bench.sh "${TNG_DIR}/TNG100n910Dark/" 10 91
 sbatch --nodes=4 --time=4:30:0 ./run_bench.sh "${TNG_DIR}/TNG100n910/" 10 910norm.csv
 sbatch --nodes=8 --time=4:30:0 ./run_bench.sh "${TNG_DIR}/TNG100n1820Dark/" 10 1820Dark.csv
 sbatch --nodes=8 --time=4:30:0 ./run_bench.sh "${TNG_DIR}/TNG100n1820/" 10 1820norm.csv
+
+
+watch squeue --me
