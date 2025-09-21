@@ -4,6 +4,7 @@
 #include "general_utils.hpp"
 
 #include <numeric>
+#include <tuple>
 
 struct dataset_base
 {

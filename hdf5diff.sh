@@ -26,10 +26,10 @@ for f1 in "${files[@]}"; do
     status=$?
 
     if [ $status -eq 0 ]; then
-        echo "$fname : 🟢 SAME"
+        echo "$fname : ✅ SAME"
     elif [ $status -eq 1 ]; then
         if [ -z "$diff_output" ]; then
-            echo "$fname : ✅ PASS (minor issue)"
+            echo "$fname : 🟢 PASS (minor issue)"
         else
             echo "$fname : ❌ DIFFERENCES"
         fi

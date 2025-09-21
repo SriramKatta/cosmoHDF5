@@ -11,6 +11,13 @@
 
 #define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
 
+#define ROOT_PROC_WORK(rank, CODE) \
+  MPI_Barrier(MPI_COMM_WORLD);     \
+  if ((rank) == 0)                 \
+  {                                \
+    CODE;                          \
+  }                                \
+  MPI_Barrier(MPI_COMM_WORLD);
 
 #define DURATION_MEASURE(duration, local_comm, world_comm, codeblock) \
   auto duration##start = MPI_Wtime();                                 \
@@ -55,7 +62,7 @@ int exception_handler()
 std::filesystem::path create_out_files_dir(const std::filesystem::path &in_files_dir, const mpi_state &state)
 {
   auto out_file_dir = in_files_dir / "out";
-    if (state.w_rank == 0)
+  if (state.w_rank == 0)
   {
     std::filesystem::create_directories(out_file_dir);
   }
