@@ -7,45 +7,52 @@
 #include <mpi_helpers.hpp>
 
 template <typename T>
-struct hdf5_pred_type {
-    static_assert(sizeof(T) == 0, "Unsupported type for HDF5 PredType");
+struct hdf5_pred_type
+{
+  static_assert(sizeof(T) == 0, "Unsupported type for HDF5 PredType");
 };
 
 template <>
-struct hdf5_pred_type<double> {
-    inline static const H5::PredType value = H5::PredType::IEEE_F64LE;
+struct hdf5_pred_type<double>
+{
+  inline static const H5::PredType value = H5::PredType::IEEE_F64LE;
 };
 
 template <>
-struct hdf5_pred_type<float> {
-    inline static const H5::PredType value = H5::PredType::IEEE_F32LE;
+struct hdf5_pred_type<float>
+{
+  inline static const H5::PredType value = H5::PredType::IEEE_F32LE;
 };
 
 template <>
-struct hdf5_pred_type<std::uint64_t> {
-    inline static const H5::PredType value = H5::PredType::STD_U64LE;
+struct hdf5_pred_type<std::uint64_t>
+{
+  inline static const H5::PredType value = H5::PredType::STD_U64LE;
 };
 
 template <>
-struct hdf5_pred_type<std::uint32_t> {
-    inline static const H5::PredType value = H5::PredType::STD_U32LE;
+struct hdf5_pred_type<std::uint32_t>
+{
+  inline static const H5::PredType value = H5::PredType::STD_U32LE;
 };
 
 template <>
-struct hdf5_pred_type<std::int64_t> {
-    inline static const H5::PredType value = H5::PredType::STD_I64LE;
+struct hdf5_pred_type<std::int64_t>
+{
+  inline static const H5::PredType value = H5::PredType::STD_I64LE;
 };
 
 template <>
-struct hdf5_pred_type<std::int32_t> {
-    inline static const H5::PredType value = H5::PredType::STD_I32LE;
+struct hdf5_pred_type<std::int32_t>
+{
+  inline static const H5::PredType value = H5::PredType::STD_I32LE;
 };
 
 template <typename VT>
-constexpr H5::PredType get_pred_type() {
-    return hdf5_pred_type<VT>::value;
+constexpr H5::PredType get_pred_type()
+{
+  return hdf5_pred_type<VT>::value;
 }
-
 
 int count_hdf5_files(std::filesystem::path &infiles_dir)
 {
@@ -85,14 +92,27 @@ inline H5::DSetMemXferPropList create_mpi_xfer(H5FD_mpio_xfer_t mode = H5FD_MPIO
   return plist;
 }
 
-H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour, unsigned int flags = H5F_ACC_TRUNC)
+H5::H5File create_parallel_file_handle(const std::filesystem::path &outfiles_dir, const mpicpp::comm &island_comm, const int island_colour, unsigned int flags = H5F_ACC_TRUNC)
 {
   auto ofname = fmt::format("{}/snap_099.{}.hdf5", outfiles_dir.string(), island_colour);
   auto facc = create_mpi_fapl(island_comm);
   return {ofname, flags, facc};
 }
 
-H5::H5File create_parallel_file_with_groups(const std::filesystem::path &outfiles_dir, const mpi_state& state, unsigned int flags = H5F_ACC_TRUNC) {
-  return create_parallel_file_with_groups(outfiles_dir, state.island_comm, state.i_color, flags);
+H5::H5File create_parallel_file_handle(const std::filesystem::path &outfiles_dir, const mpi_state &state, unsigned int flags = H5F_ACC_TRUNC)
+{
+  return create_parallel_file_handle(outfiles_dir, state.island_comm, state.i_color, flags);
 }
 
+H5::H5File create_serial_file_handle(const std::filesystem::path &files_dir, const mpicpp::comm &island_comm, const int island_colour, unsigned int flags = H5F_ACC_TRUNC)
+{
+  if (island_comm.rank() != 0 && flags == H5F_ACC_TRUNC)
+    return {};
+  auto ofname = fmt::format("{}/snap_099.{}.hdf5", files_dir.string(), island_colour);
+  return {ofname, flags};
+}
+
+H5::H5File create_serial_file_handle(const std::filesystem::path &files_dir, const mpi_state &state, unsigned int flags = H5F_ACC_TRUNC)
+{
+  return create_serial_file_handle(files_dir, state.island_comm, state.i_color, flags);
+}

@@ -49,7 +49,7 @@ try
 
   header_data.read_from_group(rgrp);
 
-  auto writefile = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
+  auto writefile = create_parallel_file_handle(outfiles_dir, islan_comm, island_colour);
   auto GRP = writefile.openGroup("/Header");
   header_data.write_to_group(GRP);
 

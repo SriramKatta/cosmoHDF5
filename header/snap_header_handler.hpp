@@ -6,30 +6,30 @@
 
 struct header_group : public hdf5_attribute_groups_base<header_group>
 {
-  double BoxSize;
-  std::int32_t Composition_vector_length;
-  std::int32_t Flag_Cooling;
-  std::int32_t Flag_DoublePrecision;
-  std::int32_t Flag_Feedback;
-  std::int32_t Flag_Metals;
-  std::int32_t Flag_Sfr;
-  std::int32_t Flag_StellarAge;
-  std::int32_t NumFilesPerSnapshot;
-  std::array<std::int32_t, 6> NumPart_ThisFile;
-  std::array<std::uint32_t, 6> NumPart_Total;
-  std::array<std::uint32_t, 6> NumPart_Total_HighWord;
-  double HubbleParam;
-  double Omega0;
-  double OmegaBaryon;
-  double OmegaLambda;
-  double Redshift;
-  double Time;
-  double UnitLength_in_cm;
-  double UnitMass_in_g;
-  double UnitVelocity_in_cm_per_s;
-  std::array<double, 6> MassTable;
-  std::string Git_commit;
-  std::string Git_date;
+  double BoxSize{};
+  std::int32_t Composition_vector_length{};
+  std::int32_t Flag_Cooling{};
+  std::int32_t Flag_DoublePrecision{};
+  std::int32_t Flag_Feedback{};
+  std::int32_t Flag_Metals{};
+  std::int32_t Flag_Sfr{};
+  std::int32_t Flag_StellarAge{};
+  std::int32_t NumFilesPerSnapshot{};
+  std::array<std::int32_t, 6> NumPart_ThisFile{};
+  std::array<std::uint32_t, 6> NumPart_Total{};
+  std::array<std::uint32_t, 6> NumPart_Total_HighWord{};
+  double HubbleParam{};
+  double Omega0{};
+  double OmegaBaryon{};
+  double OmegaLambda{};
+  double Redshift{};
+  double Time{};
+  double UnitLength_in_cm{};
+  double UnitMass_in_g{};
+  double UnitVelocity_in_cm_per_s{};
+  std::array<double, 6> MassTable{};
+  std::string Git_commit{};
+  std::string Git_date{};
 
   header_group() = default;
 

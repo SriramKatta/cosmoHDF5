@@ -41,7 +41,7 @@ try
 
   auto ifname = fmt::format("{}/snap_099.{}.hdf5", infiles_dir.string(), island_colour);
 
-  auto root_file_handle = create_parallel_file_with_groups(outfiles_dir, islan_comm, island_colour);
+  auto root_file_handle = create_parallel_file_handle(outfiles_dir, islan_comm, island_colour);
   auto PartType1 = root_file_handle.createGroup("PartType1");
 
   DURATION_MEASURE(read1perisland, islan_comm, world_comm,

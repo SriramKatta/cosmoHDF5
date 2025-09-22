@@ -36,7 +36,7 @@ try
   DURATION_MEASURE(scatter_data, state.island_comm, state.world_comm,
                    parts.distribute_data(state.island_comm););
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
-  auto outfile = create_parallel_file_with_groups(out_file_dir, state);
+  auto outfile = create_parallel_file_handle(out_file_dir, state);
 
   // Step 3: write output in parallel
   DURATION_MEASURE(write_parallel, state.island_comm, state.world_comm,
