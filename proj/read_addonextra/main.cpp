@@ -45,7 +45,7 @@ try
   auto read_file = H5::H5File(ifname, H5F_ACC_RDONLY);
   auto rgrp = read_file.openGroup("/Header");
 
-  header_group header_data;
+  header_base header_data;
 
   header_data.read_from_group(rgrp);
 

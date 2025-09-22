@@ -4,7 +4,7 @@
 #include "general_utils.hpp"
 #include "attribute_helper.hpp"
 
-struct header_group : public hdf5_attribute_groups_base<header_group>
+struct header_base : public hdf5_attribute_groups_base<header_base>
 {
   double BoxSize{};
   std::int32_t Composition_vector_length{};
@@ -31,7 +31,7 @@ struct header_group : public hdf5_attribute_groups_base<header_group>
   std::string Git_commit{};
   std::string Git_date{};
 
-  header_group() = default;
+  header_base() = default;
 
   const char *get_group_name() const override { return "/Header"; }
 
@@ -62,5 +62,33 @@ struct header_group : public hdf5_attribute_groups_base<header_group>
     f("UnitLength_in_cm", UnitLength_in_cm);
     f("UnitMass_in_g", UnitMass_in_g);
     f("UnitVelocity_in_cm_per_s", UnitVelocity_in_cm_per_s);
+  }
+};
+
+struct header_group
+{
+  header_base hb;
+  header_group() = default;
+
+  void read_from_file(const H5::H5File &file)
+  {
+    H5::Group cfg = file.openGroup("/Header");
+    hb.read_from_group(cfg);
+  }
+
+  void print()
+  {
+    hb.print();
+  }
+
+  void write_to_file(const H5::H5File &file) const
+  {
+    auto cfg = file.createGroup("/Header");
+    hb.write_to_group(cfg);
+  }
+
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    hb.distribute(comm);
   }
 };

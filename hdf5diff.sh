@@ -6,8 +6,8 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-DIR1=$1
-DIR2=$2
+DIR1=$(realpath $1)
+DIR2=$(realpath $2)
 
 files=("$DIR1"/snap_099*)
 

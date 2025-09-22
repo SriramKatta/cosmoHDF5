@@ -11,34 +11,38 @@ try
 {
   H5::Exception::dontPrint();
   auto in_files_dir = parser(argc, argv);
-  auto out_file_dir = in_files_dir / "out";
   int numfiles = count_hdf5_files(in_files_dir);
   mpicpp::environment env(&argc, &argv);
   mpi_state state(numfiles);
-
+  
+  auto out_file_dir = create_out_files_dir(in_files_dir, state);
   // state.print(in_file_name);
 
   auto in_file = create_serial_file_handle(in_files_dir, state, H5F_ACC_RDONLY);
 
   header_group header;
-  // config_group dconfig;
-  // param_group params;
-  // part_groups parts;
+  config_group dconfig;
+  param_group params;
 
-  // Step 1: read input on rank 0
-  header.read_from_file_1proc(in_file, state);
+  header.read_from_file(in_file);
+  dconfig.read_from_file(in_file);
+  params.read_from_file(in_file);
+  part_groups parts(header);
+  parts.read_from_file_1proc(in_file, state);
 
-  // header.print();
   header.distribute_data(state.island_comm);
+  dconfig.distribute_data(state.island_comm);
+  params.distribute_data(state.island_comm);
+  parts.distribute_data(state.island_comm);
 
-  auto outfile_hand = create_serial_file_handle(out_file_dir, state, H5F_ACC_TRUNC);
 
-  header.write_to_file_1proc(outfile_hand, state);
+  auto outfile_hand = create_parallel_file_handle(out_file_dir, state, H5F_ACC_TRUNC);
 
-  // DEBUG_PRINT;
-  // params.write_to_file(outfile);
-  // dconfig.write_to_file(outfile);
-  // parts.write_to_file_parallel(outfile, state);
+  header.write_to_file(outfile_hand);
+  dconfig.write_to_file(outfile_hand);
+  params.write_to_file(outfile_hand);
+  parts.write_to_file_parallel(outfile_hand, state);
+
 
   return 0;
 }

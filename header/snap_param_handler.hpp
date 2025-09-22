@@ -405,6 +405,20 @@ struct param_group
     }
   }
 
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    if (dpfo)
+      dpfo->distribute(comm);
+    if (dpfb)
+      dpfb->distribute(comm);
+    if (dpfe1)
+      dpfe1->distribute(comm);
+    if (dpfe2)
+      dpfe2->distribute(comm);
+    if (ndpd)
+      ndpd->distribute(comm);
+  }
+
   void write_to_file(H5::H5File &file) const
   {
     auto cfg = file.createGroup("/Parameters");

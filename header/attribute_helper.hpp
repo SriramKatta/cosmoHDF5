@@ -121,17 +121,12 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
                              { write_attribute(grp, name, value); });
   }
 
-  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  void read_from_group_1proc(const H5::H5File &file, const mpi_state &state)
   {
     H5::Group header = file.openGroup(get_group_name());
     if (state.i_rank != 0)
       return;
     read_from_group(header);
-  }
-
-  void distribute_data(const mpicpp::comm &comm)
-  {
-    distribute(comm);
   }
 
   void read_from_file(const H5::H5File &file)

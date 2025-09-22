@@ -296,6 +296,18 @@ struct config_group
       ndcl->write_to_group(cfg);
   }
 
+  void distribute_data(const mpicpp::comm &comm)
+  {
+    if (dcb)
+      dcb->distribute(comm);
+    if (dcl)
+      dcl->distribute(comm);
+    if (ndc)
+      ndc->distribute(comm);
+    if (ndcl)
+      ndcl->distribute(comm);
+  }
+
   void print() const
   {
     if (dcb)

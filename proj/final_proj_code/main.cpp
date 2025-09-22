@@ -19,7 +19,7 @@ try
 
   auto in_file = H5::H5File(in_file_name.string(), H5F_ACC_RDONLY);
 
-  header_group header;
+  header_base header;
   config_group dconfig;
   param_group params;
   part_groups parts;

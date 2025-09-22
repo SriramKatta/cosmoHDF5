@@ -485,9 +485,12 @@ struct part_groups
   std::unique_ptr<PartType4> pt4;
   std::unique_ptr<PartType5> pt5;
 
-  part_groups() = default;
+  part_groups(const header_group &hg)
+  {
+    setup(hg.hb);
+  }
 
-  void setup(const header_group &header)
+  void setup(const header_base &header)
   {
     if (header.NumPart_Total[0] > 0)
       pt0 = std::make_unique<PartType0>();
