@@ -154,3 +154,7 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
     static_cast<Derived *>(this)->process_attributes(std::forward<Func>(f));
   }
 };
+
+struct attribute_groups_base{
+  virtual  const char* group_name() const = 0;
+};

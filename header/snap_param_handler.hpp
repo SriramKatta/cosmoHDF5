@@ -365,7 +365,7 @@ struct nondarkparamfields : public hdf5_attribute_groups_base<nondarkparamfields
   }
 };
 
-struct param_group
+struct param_group : attribute_groups_base
 {
   std::unique_ptr<darkparamfields_optional> dpfo;
   std::unique_ptr<darkparamfields_base> dpfb;
@@ -375,9 +375,14 @@ struct param_group
 
   param_group() = default;
 
+  const char *group_name() const override
+  {
+    return "/Parameters";
+  }
+
   void read_from_file(const H5::H5File &file)
   {
-    auto cfg = file.openGroup("/Parameters");
+    auto cfg = file.openGroup(group_name());
     dpfb = std::make_unique<darkparamfields_base>();
     dpfb->read_from_group(cfg);
     if (cfg.attrExists("SofteningComovingType4"))
@@ -407,31 +412,31 @@ struct param_group
 
   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
   {
-    auto cfg = file.openGroup("/Parameters");
+    auto cfg = file.openGroup(group_name());
     dpfb = std::make_unique<darkparamfields_base>();
-    dpfb->read_from_group_1proc(cfg,state);
+    dpfb->read_from_group_1proc(cfg, state);
     if (cfg.attrExists("SofteningComovingType4"))
     {
       dpfe1 = std::make_unique<darkparamfields_ext1>();
-      dpfe1->read_from_group_1proc(cfg,state);
+      dpfe1->read_from_group_1proc(cfg, state);
     }
     if (cfg.attrExists("SofteningComovingType5"))
     {
       dpfe2 = std::make_unique<darkparamfields_ext2>();
-      dpfe2->read_from_group_1proc(cfg,state);
+      dpfe2->read_from_group_1proc(cfg, state);
     }
 
     if (cfg.attrExists("CellShapingFactor"))
     {
       dpfo = std::make_unique<darkparamfields_optional>();
-      dpfo->read_from_group_1proc(cfg,state);
+      dpfo->read_from_group_1proc(cfg, state);
       ndpd = nullptr;
     }
     else
     {
       dpfo = nullptr;
       ndpd = std::make_unique<nondarkparamfields>();
-      ndpd->read_from_group_1proc(cfg,state);
+      ndpd->read_from_group_1proc(cfg, state);
     }
   }
 
@@ -451,7 +456,7 @@ struct param_group
 
   void write_to_file(H5::H5File &file) const
   {
-    auto cfg = file.createGroup("/Parameters");
+    auto cfg = file.createGroup(group_name());
     if (dpfo)
       dpfo->write_to_group(cfg);
     if (dpfb)
@@ -462,6 +467,24 @@ struct param_group
       dpfe2->write_to_group(cfg);
     if (ndpd)
       ndpd->write_to_group(cfg);
+  }
+
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  {
+    H5::Group cfg;
+    if (state.i_rank == 0)
+      cfg = file.createGroup(group_name());
+
+    if (dpfo)
+      dpfo->write_to_group_1proc(cfg, state);
+    if (dpfb)
+      dpfb->write_to_group_1proc(cfg, state);
+    if (dpfe1)
+      dpfe1->write_to_group_1proc(cfg, state);
+    if (dpfe2)
+      dpfe2->write_to_group_1proc(cfg, state);
+    if (ndpd)
+      ndpd->write_to_group_1proc(cfg, state);
   }
 
   void print() const

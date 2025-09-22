@@ -545,4 +545,18 @@ struct part_groups
     if (pt5)
       pt5->write_to_file_parallel(file, state);
   }
+
+  void write_to_file_1proc(H5::H5File &file, const mpi_state &state) const
+  {
+    if (pt0)
+      pt0->write_to_file_parallel(file, state);
+    if (pt1)
+      pt1->write_to_file_parallel(file, state);
+    if (pt3)
+      pt3->write_to_file_parallel(file, state);
+    if (pt4)
+      pt4->write_to_file_parallel(file, state);
+    if (pt5)
+      pt5->write_to_file_parallel(file, state);
+  }
 };

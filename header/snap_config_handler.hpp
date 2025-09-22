@@ -249,7 +249,7 @@ struct nondarkconfigdata_large : public hdf5_attribute_groups_base<nondarkconfig
   }
 };
 
-struct config_group
+struct config_group : attribute_groups_base
 {
   std::unique_ptr<darkconfigfields_base> dcb;
   std::unique_ptr<darkconfigfields_large> dcl;
@@ -258,9 +258,14 @@ struct config_group
 
   config_group() = default;
 
+  const char *group_name() const override
+  {
+    return "/Config";
+  }
+
   void read_from_file(const H5::H5File &file)
   {
-    H5::Group cfg = file.openGroup("/Config");
+    H5::Group cfg = file.openGroup(group_name());
     dcb = std::make_unique<darkconfigfields_base>();
     dcb->read_from_group(cfg);
 
@@ -283,9 +288,9 @@ struct config_group
     }
   }
 
-  void read_from_file_1proc(const H5::H5File &file, const mpi_state& state)
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
   {
-    H5::Group cfg = file.openGroup("/Config");
+    H5::Group cfg = file.openGroup(group_name());
     dcb = std::make_unique<darkconfigfields_base>();
     dcb->read_from_group_1proc(cfg, state);
 
@@ -310,7 +315,7 @@ struct config_group
 
   void write_to_file(H5::H5File &file) const
   {
-    auto cfg = file.createGroup("/Config");
+    auto cfg = file.createGroup(group_name());
     if (dcb)
       dcb->write_to_group(cfg);
     if (dcl)
@@ -319,6 +324,22 @@ struct config_group
       ndc->write_to_group(cfg);
     if (ndcl)
       ndcl->write_to_group(cfg);
+  }
+
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  {
+    H5::Group cfg;
+    if (state.i_rank == 0)
+      cfg = file.createGroup(group_name());
+
+    if (dcb)
+      dcb->write_to_group_1proc(cfg, state);
+    if (dcl)
+      dcl->write_to_group_1proc(cfg, state);
+    if (ndc)
+      ndc->write_to_group_1proc(cfg, state);
+    if (ndcl)
+      ndcl->write_to_group_1proc(cfg, state);
   }
 
   void distribute_data(const mpicpp::comm &comm)

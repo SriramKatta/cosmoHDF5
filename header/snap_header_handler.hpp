@@ -65,20 +65,25 @@ struct header_base : public hdf5_attribute_groups_base<header_base>
   }
 };
 
-struct header_group
+struct header_group : public attribute_groups_base
 {
   header_base hb;
   header_group() = default;
 
+  const char *group_name() const override
+  {
+    return "/Header";
+  }
+
   void read_from_file(const H5::H5File &file)
   {
-    H5::Group cfg = file.openGroup("/Header");
+    H5::Group cfg = file.openGroup(group_name());
     hb.read_from_group(cfg);
   }
 
   void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
   {
-    H5::Group cfg = file.openGroup("/Header");
+    H5::Group cfg = file.openGroup(group_name());
     hb.read_from_group_1proc(cfg, state);
   }
 
@@ -89,13 +94,15 @@ struct header_group
 
   void write_to_file(const H5::H5File &file) const
   {
-    auto cfg = file.createGroup("/Header");
+    auto cfg = file.createGroup(group_name());
     hb.write_to_group(cfg);
   }
 
   void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
   {
-    auto cfg = file.createGroup("/Header");
+    H5::Group cfg;
+    if (state.i_rank == 0)
+      cfg = file.createGroup(group_name());
     hb.write_to_group_1proc(cfg, state);
   }
 
