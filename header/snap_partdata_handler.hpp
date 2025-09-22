@@ -33,12 +33,9 @@ struct dataset_attributes : virtual dataset_base
     PRINT_VAR(to_cgs);
     PRINT_VAR(velocity_scaling);
   }
-  virtual void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
+
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank)
   {
-    if (rank != 0)
-    {
-      return;
-    }
     auto dataset = grp.openDataSet(dataset_name);
     read_attribute(dataset, "a_scaling", a_scaling);
     read_attribute(dataset, "h_scaling", h_scaling);
@@ -46,6 +43,15 @@ struct dataset_attributes : virtual dataset_base
     read_attribute(dataset, "mass_scaling", mass_scaling);
     read_attribute(dataset, "to_cgs", to_cgs);
     read_attribute(dataset, "velocity_scaling", velocity_scaling);
+  }
+
+  virtual void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
+  {
+    if (rank != 0)
+    {
+      return;
+    }
+    read_dataset_parallel(grp, dataset_name, rank);
   }
   virtual void distribute_data(const mpicpp::comm &comm) override
   {
@@ -69,7 +75,7 @@ struct dataset_attributes : virtual dataset_base
 
   void write_to_file_1proc(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const
   {
-    if (comm.rank() != 0)
+    if (comm.rank() != 0) // TODO: USE PARALLEL FOR CLEANER CODE
       return;
     auto dataset = grp.openDataSet(dataset_name);
     write_attribute(dataset, "a_scaling", a_scaling);
@@ -105,7 +111,7 @@ struct dataset_data : virtual dataset_base
     if (rank != 0)
     {
       return;
-    }
+    } // TODO: USE PARALLEL FOR CLEANER CODE
     auto ds = grp.openDataSet(dataset_name);
     auto space = ds.getSpace();
     auto dataspace_rank = space.getSimpleExtentNdims();
@@ -118,6 +124,22 @@ struct dataset_data : virtual dataset_base
     data_chunk.resize(total_elem);
     ds.read(data_chunk.data(), get_pred_type<VT>());
   }
+
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const int rank)
+  {
+    auto ds = grp.openDataSet(dataset_name);
+    auto space = ds.getSpace();
+    auto dataspace_rank = space.getSimpleExtentNdims();
+    local_dataspace_dims.resize(dataspace_rank);
+    total_dataspace_dims.resize(dataspace_rank);
+    local_dataspace_max_dims.resize(dataspace_rank);
+    space.getSimpleExtentDims(local_dataspace_dims.data(), local_dataspace_max_dims.data());
+    total_dataspace_dims = local_dataspace_dims;
+    int total_elem = std::accumulate(local_dataspace_dims.begin(), local_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
+    data_chunk.resize(total_elem);
+    ds.read(data_chunk.data(), get_pred_type<VT>());
+  }
+
   void distribute_data(const mpicpp::comm &comm) override
   {
     // Broadcast dataspace info
@@ -236,6 +258,13 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
     dataset_data<VT>::read_dataset_1proc(grp, dataset_name, rank);
     dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
   }
+
+  void read_from_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const
+  {
+    dataset_data<VT>::read_from_file_parallel(grp, dataset_name, comm);
+    dataset_attributes::read_from_file_parallel(grp, dataset_name, comm);
+  }
+
   void distribute_data(const mpicpp::comm &comm) override
   {
     dataset_data<VT>::distribute_data(comm);
@@ -292,6 +321,13 @@ struct PartTypeCommon : PartTypeBase
     auto group = file.openGroup(Derived::group_name());
     for_each_dataset([&](auto &ds)
                      { ds.read_dataset_1proc(group, ds.name, state.i_rank); });
+  }
+
+  void read_from_file_parallel(const H5::H5File &file)
+  {
+    auto group = file.openGroup(Derived::group_name());
+    for_each_dataset([&](auto &ds)
+                     { ds.read_from_file_parallel(group, ds.name, state.i_rank); });
   }
 
   void distribute_data(const mpicpp::comm &comm) override
@@ -596,6 +632,20 @@ struct part_groups
       pt4->read_from_file_1proc(file, state);
     if (pt5)
       pt5->read_from_file_1proc(file, state);
+  }
+
+  void read_from_file_parallel(const H5::H5File &file)
+  {
+    if (pt0)
+      pt0->read_from_file_parallel(file);
+    if (pt1)
+      pt1->read_from_file_parallel(file);
+    if (pt3)
+      pt3->read_from_file_parallel(file);
+    if (pt4)
+      pt4->read_from_file_parallel(file);
+    if (pt5)
+      pt5->read_from_file_parallel(file);
   }
 
   void distribute_data(const mpicpp::comm &comm)
