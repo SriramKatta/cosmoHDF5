@@ -14,7 +14,7 @@ try
   int numfiles = count_hdf5_files(in_files_dir);
   mpicpp::environment env(&argc, &argv);
   mpi_state state(numfiles);
-  
+
   auto out_file_dir = create_out_files_dir(in_files_dir, state);
   // state.print(in_file_name);
 
@@ -35,7 +35,7 @@ try
   params.read_from_file_parallel(in_file);
   params.distribute_data(state.island_comm);
   params.write_to_file_parallel(outfile_hand);
-  
+
   part_groups parts(header);
   parts.read_from_file_1proc(in_file, state);
   parts.distribute_data(state.island_comm);
