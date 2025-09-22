@@ -27,7 +27,7 @@ try
   header.write_to_file_1proc(outfile_hand, state);
 
   param_group params;
-  params.read_from_file_parallel(in_file);
+  params.read_from_file_1proc(in_file, state);
   params.distribute_data(state.island_comm);
   params.gather_data(state.island_comm);
   params.write_to_file_1proc(outfile_hand, state);
@@ -41,7 +41,6 @@ try
   part_groups parts(header);
   parts.read_from_file_1proc(in_file, state);
   parts.distribute_data(state.island_comm);
-
   parts.gather_data(state.island_comm);
   parts.write_to_file_1proc(outfile_hand, state);
 
