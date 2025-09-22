@@ -26,28 +26,20 @@ try
   header.distribute_data(state.island_comm);
   header.write_to_file_parallel(outfile_hand);
 
-
   config_group dconfig;
   dconfig.read_from_file_1proc(in_file, state);
   dconfig.distribute_data(state.island_comm);
   dconfig.write_to_file_parallel(outfile_hand);
 
-  
   param_group params;
   params.read_from_file_parallel(in_file);
   params.distribute_data(state.island_comm);
   params.write_to_file_parallel(outfile_hand);
   
-  
   part_groups parts(header);
   parts.read_from_file_1proc(in_file, state);
   parts.distribute_data(state.island_comm);
   parts.write_to_file_parallel(outfile_hand, state);
-
-
-
-
-
 
   return 0;
 }
