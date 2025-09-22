@@ -249,7 +249,7 @@ struct nondarkconfigdata_large : public hdf5_attribute_groups_base<nondarkconfig
   }
 };
 
-struct config_group : attribute_groups_base
+struct config_group : groups_base
 {
   std::unique_ptr<darkconfigfields_base> dcb;
   std::unique_ptr<darkconfigfields_large> dcl;
@@ -263,7 +263,7 @@ struct config_group : attribute_groups_base
     return "/Config";
   }
 
-  void read_from_file(const H5::H5File &file)
+  void read_from_file_parallel(const H5::H5File &file) override
   {
     H5::Group cfg = file.openGroup(group_name());
     dcb = std::make_unique<darkconfigfields_base>();
@@ -288,7 +288,7 @@ struct config_group : attribute_groups_base
     }
   }
 
-  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
   {
     H5::Group cfg = file.openGroup(group_name());
     dcb = std::make_unique<darkconfigfields_base>();
@@ -313,7 +313,7 @@ struct config_group : attribute_groups_base
     }
   }
 
-  void write_to_file(H5::H5File &file) const
+  void write_to_file_parallel(const H5::H5File &file) const override
   {
     auto cfg = file.createGroup(group_name());
     if (dcb)
@@ -326,7 +326,7 @@ struct config_group : attribute_groups_base
       ndcl->write_to_group(cfg);
   }
 
-  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const override
   {
     H5::Group cfg;
     if (state.i_rank == 0)
@@ -342,7 +342,7 @@ struct config_group : attribute_groups_base
       ndcl->write_to_group_1proc(cfg, state);
   }
 
-  void distribute_data(const mpicpp::comm &comm)
+  void distribute_data(const mpicpp::comm &comm) override
   {
     if (dcb)
       dcb->distribute(comm);
@@ -354,7 +354,7 @@ struct config_group : attribute_groups_base
       ndcl->distribute(comm);
   }
 
-  void print() const
+  void print() const override
   {
     if (dcb)
       dcb->print();
@@ -364,5 +364,9 @@ struct config_group : attribute_groups_base
       ndc->print();
     if (ndcl)
       ndcl->print();
+  }
+
+  void gather_data(const mpicpp::comm &comm) override
+  {
   }
 };

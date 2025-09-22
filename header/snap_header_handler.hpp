@@ -65,7 +65,7 @@ struct header_base : public hdf5_attribute_groups_base<header_base>
   }
 };
 
-struct header_group : public attribute_groups_base
+struct header_group : public groups_base
 {
   header_base hb;
   header_group() = default;
@@ -75,7 +75,7 @@ struct header_group : public attribute_groups_base
     return "/Header";
   }
 
-  void read_from_file(const H5::H5File &file)
+  void read_from_file_parallel(const H5::H5File &file) override
   {
     H5::Group cfg = file.openGroup(group_name());
     hb.read_from_group(cfg);
@@ -87,18 +87,18 @@ struct header_group : public attribute_groups_base
     hb.read_from_group_1proc(cfg, state);
   }
 
-  void print()
+  void print() const override
   {
     hb.print();
   }
 
-  void write_to_file(const H5::H5File &file) const
+  void write_to_file_parallel(const H5::H5File &file) const override
   {
     auto cfg = file.createGroup(group_name());
     hb.write_to_group(cfg);
   }
 
-  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const override
   {
     H5::Group cfg;
     if (state.i_rank == 0)
@@ -106,8 +106,12 @@ struct header_group : public attribute_groups_base
     hb.write_to_group_1proc(cfg, state);
   }
 
-  void distribute_data(const mpicpp::comm &comm)
+  void distribute_data(const mpicpp::comm &comm) override
   {
     hb.distribute(comm);
+  }
+
+  void gather_data(const mpicpp::comm &comm) override
+  {
   }
 };

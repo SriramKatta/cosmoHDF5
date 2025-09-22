@@ -27,22 +27,23 @@ try
   header.write_to_file_1proc(outfile_hand, state);
 
   param_group params;
-  params.read_from_file(in_file);
+  params.read_from_file_parallel(in_file);
   params.distribute_data(state.island_comm);
+  params.gather_data(state.island_comm);
   params.write_to_file_1proc(outfile_hand, state);
-  
+
   config_group dconfig;
   dconfig.read_from_file_1proc(in_file, state);
   dconfig.distribute_data(state.island_comm);
+  dconfig.gather_data(state.island_comm);
   dconfig.write_to_file_1proc(outfile_hand, state);
-  
-  #if 0
+
   part_groups parts(header);
   parts.read_from_file_1proc(in_file, state);
   parts.distribute_data(state.island_comm);
-  parts.write_to_file_1proc(outfile_hand, state);
 
-#endif
+  parts.gather_data(state.island_comm);
+  parts.write_to_file_1proc(outfile_hand, state);
 
   return 0;
 }

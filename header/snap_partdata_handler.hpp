@@ -10,6 +10,7 @@ struct dataset_base
 {
   virtual void read_dataset_1proc(const H5::Group &, const std::string &, const int) = 0;
   virtual void distribute_data(const mpicpp::comm &) = 0;
+  virtual void gather_data(const mpicpp::comm &) = 0;
   virtual void write_to_file_parallel(const H5::Group &, const std::string &, const mpicpp::comm &) const = 0;
   virtual void print() const = 0;
   virtual ~dataset_base() = default;
@@ -65,6 +66,19 @@ struct dataset_attributes : virtual dataset_base
     write_attribute(dataset, "to_cgs", to_cgs);
     write_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
+
+  void write_to_file_1proc(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const
+  {
+    if (comm.rank() != 0)
+      return;
+    auto dataset = grp.openDataSet(dataset_name);
+    write_attribute(dataset, "a_scaling", a_scaling);
+    write_attribute(dataset, "h_scaling", h_scaling);
+    write_attribute(dataset, "length_scaling", length_scaling);
+    write_attribute(dataset, "mass_scaling", mass_scaling);
+    write_attribute(dataset, "to_cgs", to_cgs);
+    write_attribute(dataset, "velocity_scaling", velocity_scaling);
+  }
 };
 
 template <typename VT>
@@ -80,7 +94,7 @@ struct dataset_data : virtual dataset_base
 
   void print() const
   {
-    fmt::print("Dataset info:\n");
+    fmt::print("Dataset info: {}\n", name);
     fmt::print(" datatspace: {}\n", local_dataspace_dims);
     fmt::print(" max dataspace: {}\n", local_dataspace_max_dims);
     fmt::print(" total dataspace: {}\n", total_dataspace_dims);
@@ -109,7 +123,7 @@ struct dataset_data : virtual dataset_base
     // Broadcast dataspace info
     int dataspace_rank = local_dataspace_dims.size();
     comm.ibcast(dataspace_rank, 0);
-    total_dataspace_dims.resize(dataspace_rank);
+    total_dataspace_dims.resize(dataspace_rank); // results in no op if same size
     comm.ibcast(total_dataspace_dims, 0);
 
     local_dataspace_dims.resize(dataspace_rank);     // results in no op if same size
@@ -139,6 +153,38 @@ struct dataset_data : virtual dataset_base
     data_chunk = std::move(local_data);
   }
 
+  void gather_data(const mpicpp::comm &comm) override
+  {
+    auto total_entries = std::accumulate(total_dataspace_dims.begin(), total_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
+    int local_entries_count = std::accumulate(local_dataspace_dims.begin(), local_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
+    std::vector<VT> global_data(total_entries);
+    std::vector<int> recv_counts(comm.size(), 0);
+    std::vector<int> recv_disp(comm.size(), 0);
+    comm.igather(local_entries_count, recv_counts, 0);
+
+    // Calculate displacements the same way as in distribute_data
+    for (size_t i = 1; i < comm.size(); i++)
+    {
+      recv_disp[i] = recv_disp[i - 1] + recv_counts[i - 1];
+    }
+
+    comm.igatherv(data_chunk, global_data, recv_counts, recv_disp, 0);
+
+    if (comm.rank() == 0)
+    {
+      data_chunk = std::move(global_data);
+      // Restore original dimensions on rank 0
+      local_dataspace_dims = total_dataspace_dims;
+    }
+    else
+    {
+      data_chunk.resize(0);
+      local_dataspace_dims.resize(0);
+      local_dataspace_max_dims.resize(0);
+      total_dataspace_dims.resize(0);
+    }
+  }
+
   void write_to_file_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const override
   {
     H5::DataSpace file_space(total_dataspace_dims.size(), total_dataspace_dims.data());
@@ -162,6 +208,17 @@ struct dataset_data : virtual dataset_base
     dataset_handle.write(data_chunk.data(),
                          h5dt,
                          mem_space, file_space, transfer_prop);
+  }
+
+  void write_to_file_1proc(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const
+  {
+    if (comm.rank() == 0)
+    {
+      auto h5dt = get_pred_type<VT>();
+      H5::DataSpace space(local_dataspace_dims.size(), local_dataspace_dims.data());
+      auto dataset = grp.createDataSet(name, h5dt, space);
+      dataset.write(data_chunk.data(), h5dt);
+    }
   }
 };
 
@@ -189,13 +246,20 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
     dataset_data<VT>::write_to_file_parallel(grp, dataset_name, comm);
     dataset_attributes::write_to_file_parallel(grp, dataset_name, comm);
   }
+
+  void write_to_file_1proc(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) const
+  {
+    dataset_data<VT>::write_to_file_1proc(grp, dataset_name, comm);
+    dataset_attributes::write_to_file_1proc(grp, dataset_name, comm);
+  }
 };
 
 struct PartTypeBase
 {
   virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
   virtual void distribute_data(const mpicpp::comm &) = 0;
-  virtual void write_to_file_parallel(H5::H5File &file, const mpi_state &) const = 0;
+  virtual void gather_data(const mpicpp::comm &) = 0;
+  virtual void write_to_file_parallel(const H5::H5File &file, const mpi_state &) const = 0;
   virtual void print() const = 0;
   virtual ~PartTypeBase() = default;
 };
@@ -236,17 +300,33 @@ struct PartTypeCommon : PartTypeBase
                      { ds.distribute_data(comm); });
   }
 
+  void gather_data(const mpicpp::comm &comm) override
+  {
+    for_each_dataset([&](auto &ds)
+                     { ds.gather_data(comm); });
+  }
+
   void print() const override
   {
     for_each_dataset([](auto const &ds)
                      { ds.print(); });
   }
 
-  void write_to_file_parallel(H5::H5File &file, const mpi_state &state) const override
+  void write_to_file_parallel(const H5::H5File &file, const mpi_state &state) const override
   {
     auto group = file.createGroup(Derived::group_name());
     for_each_dataset([&](auto const &ds)
                      { ds.write_to_file_parallel(group, ds.name, state.island_comm); });
+  }
+
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  {
+    if (state.island_comm.rank() == 0)
+    {
+      auto group = file.createGroup(Derived::group_name());
+      for_each_dataset([&](auto const &ds)
+                       { ds.write_to_file_1proc(group, ds.name, state.island_comm); });
+    }
   }
 };
 
@@ -532,7 +612,21 @@ struct part_groups
       pt5->distribute_data(comm);
   }
 
-  void write_to_file_parallel(H5::H5File &file, const mpi_state &state) const
+  void gather_data(const mpicpp::comm &comm)
+  {
+    if (pt0)
+      pt0->gather_data(comm);
+    if (pt1)
+      pt1->gather_data(comm);
+    if (pt3)
+      pt3->gather_data(comm);
+    if (pt4)
+      pt4->gather_data(comm);
+    if (pt5)
+      pt5->gather_data(comm);
+  }
+
+  void write_to_file_parallel(const H5::H5File &file, const mpi_state &state) const
   {
     if (pt0)
       pt0->write_to_file_parallel(file, state);
@@ -549,14 +643,28 @@ struct part_groups
   void write_to_file_1proc(H5::H5File &file, const mpi_state &state) const
   {
     if (pt0)
-      pt0->write_to_file_parallel(file, state);
+      pt0->write_to_file_1proc(file, state);
     if (pt1)
-      pt1->write_to_file_parallel(file, state);
+      pt1->write_to_file_1proc(file, state);
     if (pt3)
-      pt3->write_to_file_parallel(file, state);
+      pt3->write_to_file_1proc(file, state);
     if (pt4)
-      pt4->write_to_file_parallel(file, state);
+      pt4->write_to_file_1proc(file, state);
     if (pt5)
-      pt5->write_to_file_parallel(file, state);
+      pt5->write_to_file_1proc(file, state);
+  }
+
+  void print()
+  {
+    if (pt0)
+      pt0->print();
+    if (pt1)
+      pt1->print();
+    if (pt3)
+      pt3->print();
+    if (pt4)
+      pt4->print();
+    if (pt5)
+      pt5->print();
   }
 };

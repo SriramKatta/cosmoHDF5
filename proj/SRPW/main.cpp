@@ -24,19 +24,19 @@ try
   header_group header;
   header.read_from_file_1proc(in_file, state);
   header.distribute_data(state.island_comm);
-  header.write_to_file(outfile_hand);
+  header.write_to_file_parallel(outfile_hand);
 
 
   config_group dconfig;
   dconfig.read_from_file_1proc(in_file, state);
   dconfig.distribute_data(state.island_comm);
-  dconfig.write_to_file(outfile_hand);
+  dconfig.write_to_file_parallel(outfile_hand);
 
   
   param_group params;
-  params.read_from_file(in_file);
+  params.read_from_file_parallel(in_file);
   params.distribute_data(state.island_comm);
-  params.write_to_file(outfile_hand);
+  params.write_to_file_parallel(outfile_hand);
   
   
   part_groups parts(header);

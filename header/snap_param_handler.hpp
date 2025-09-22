@@ -365,7 +365,7 @@ struct nondarkparamfields : public hdf5_attribute_groups_base<nondarkparamfields
   }
 };
 
-struct param_group : attribute_groups_base
+struct param_group : groups_base
 {
   std::unique_ptr<darkparamfields_optional> dpfo;
   std::unique_ptr<darkparamfields_base> dpfb;
@@ -380,7 +380,7 @@ struct param_group : attribute_groups_base
     return "/Parameters";
   }
 
-  void read_from_file(const H5::H5File &file)
+  void read_from_file_parallel(const H5::H5File &file) override
   {
     auto cfg = file.openGroup(group_name());
     dpfb = std::make_unique<darkparamfields_base>();
@@ -410,7 +410,7 @@ struct param_group : attribute_groups_base
     }
   }
 
-  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state) override
   {
     auto cfg = file.openGroup(group_name());
     dpfb = std::make_unique<darkparamfields_base>();
@@ -440,7 +440,7 @@ struct param_group : attribute_groups_base
     }
   }
 
-  void distribute_data(const mpicpp::comm &comm)
+  void distribute_data(const mpicpp::comm &comm) override
   {
     if (dpfo)
       dpfo->distribute(comm);
@@ -454,7 +454,7 @@ struct param_group : attribute_groups_base
       ndpd->distribute(comm);
   }
 
-  void write_to_file(H5::H5File &file) const
+  void write_to_file_parallel(const H5::H5File &file) const override
   {
     auto cfg = file.createGroup(group_name());
     if (dpfo)
@@ -469,7 +469,7 @@ struct param_group : attribute_groups_base
       ndpd->write_to_group(cfg);
   }
 
-  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const override
   {
     H5::Group cfg;
     if (state.i_rank == 0)
@@ -487,7 +487,7 @@ struct param_group : attribute_groups_base
       ndpd->write_to_group_1proc(cfg, state);
   }
 
-  void print() const
+  void print() const override
   {
     if (dpfo)
       dpfo->print();
@@ -499,5 +499,9 @@ struct param_group : attribute_groups_base
       dpfe2->print();
     if (ndpd)
       ndpd->print();
+  }
+
+  void gather_data(const mpicpp::comm &comm) override
+  {
   }
 };

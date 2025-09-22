@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hdf5_utils.hpp"
+#include <H5Cpp.h>
 
 template <typename VT>
 void read_attribute(const H5::H5Object &obj, const std::string &attr_name, VT &value)
@@ -22,6 +23,7 @@ void read_attribute<std::string>(const H5::H5Object &obj, const std::string &att
   H5::Attribute attr = obj.openAttribute(attr_name);
   H5::StrType str_type = attr.getStrType();
   attr.read(str_type, value);
+  value.resize(str_type.getSize());
 }
 
 // Write a scalar attribute
@@ -155,6 +157,14 @@ struct hdf5_attribute_groups_base : hdf5_attribute_group_iface
   }
 };
 
-struct attribute_groups_base{
-  virtual  const char* group_name() const = 0;
+struct groups_base
+{
+  virtual const char *group_name() const = 0;
+  virtual void read_from_file_parallel(const H5::H5File &) = 0;
+  virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
+  virtual void print() const = 0;
+  virtual void distribute_data(const mpicpp::comm &) = 0;
+  virtual void gather_data(const mpicpp::comm &) = 0;
+  virtual void write_to_file_parallel(const H5::H5File &) const = 0;
+  virtual void write_to_file_1proc(const H5::H5File &, const mpi_state &) const = 0;
 };
