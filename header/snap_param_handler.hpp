@@ -405,6 +405,36 @@ struct param_group
     }
   }
 
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  {
+    auto cfg = file.openGroup("/Parameters");
+    dpfb = std::make_unique<darkparamfields_base>();
+    dpfb->read_from_group_1proc(cfg,state);
+    if (cfg.attrExists("SofteningComovingType4"))
+    {
+      dpfe1 = std::make_unique<darkparamfields_ext1>();
+      dpfe1->read_from_group_1proc(cfg,state);
+    }
+    if (cfg.attrExists("SofteningComovingType5"))
+    {
+      dpfe2 = std::make_unique<darkparamfields_ext2>();
+      dpfe2->read_from_group_1proc(cfg,state);
+    }
+
+    if (cfg.attrExists("CellShapingFactor"))
+    {
+      dpfo = std::make_unique<darkparamfields_optional>();
+      dpfo->read_from_group_1proc(cfg,state);
+      ndpd = nullptr;
+    }
+    else
+    {
+      dpfo = nullptr;
+      ndpd = std::make_unique<nondarkparamfields>();
+      ndpd->read_from_group_1proc(cfg,state);
+    }
+  }
+
   void distribute_data(const mpicpp::comm &comm)
   {
     if (dpfo)

@@ -1,4 +1,4 @@
-set(EXE_NAME final_extension)
+set(EXE_NAME sreadswrite)
 
 add_executable(${EXE_NAME} main.cpp)
 target_link_libraries(${EXE_NAME} PRIVATE fmt::fmt)

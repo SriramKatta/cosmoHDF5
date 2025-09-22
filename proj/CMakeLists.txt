@@ -1,12 +1,2 @@
-add_subdirectory(step01)
-add_subdirectory(step02)
-add_subdirectory(step02_serial)
-add_subdirectory(testdatadiff)
-add_subdirectory(read_addonextra)
-add_subdirectory(newcode_data_check)
-
-
-
-
-add_subdirectory(final_proj_code)
-add_subdirectory(final_proj_code_extension)
+add_subdirectory(SRPW)
+add_subdirectory(SRSW)

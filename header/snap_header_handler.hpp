@@ -76,6 +76,12 @@ struct header_group
     hb.read_from_group(cfg);
   }
 
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state &state)
+  {
+    H5::Group cfg = file.openGroup("/Header");
+    hb.read_from_group_1proc(cfg, state);
+  }
+
   void print()
   {
     hb.print();
@@ -85,6 +91,12 @@ struct header_group
   {
     auto cfg = file.createGroup("/Header");
     hb.write_to_group(cfg);
+  }
+
+  void write_to_file_1proc(const H5::H5File &file, const mpi_state &state) const
+  {
+    auto cfg = file.createGroup("/Header");
+    hb.write_to_group_1proc(cfg, state);
   }
 
   void distribute_data(const mpicpp::comm &comm)

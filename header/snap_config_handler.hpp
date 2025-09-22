@@ -283,6 +283,31 @@ struct config_group
     }
   }
 
+  void read_from_file_1proc(const H5::H5File &file, const mpi_state& state)
+  {
+    H5::Group cfg = file.openGroup("/Config");
+    dcb = std::make_unique<darkconfigfields_base>();
+    dcb->read_from_group_1proc(cfg, state);
+
+    if (cfg.attrExists("RUNNING_SAFETY_FILE"))
+    {
+      dcl = std::make_unique<darkconfigfields_large>();
+      dcl->read_from_group_1proc(cfg, state);
+    }
+
+    if (cfg.attrExists("ADAPTIVE_HYDRO_SOFTENING"))
+    {
+      ndc = std::make_unique<nondarkconfigdata>();
+      ndc->read_from_group_1proc(cfg, state);
+    }
+
+    if (cfg.attrExists("CHECKSUM_DEBUG"))
+    {
+      ndcl = std::make_unique<nondarkconfigdata_large>();
+      ndcl->read_from_group_1proc(cfg, state);
+    }
+  }
+
   void write_to_file(H5::H5File &file) const
   {
     auto cfg = file.createGroup("/Config");
