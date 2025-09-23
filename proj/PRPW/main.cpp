@@ -34,10 +34,9 @@ try
   params.write_to_file_parallel(outfile_hand);
   
   part_groups parts(header);
-#if 0
-  parts.read_from_file_1proc(in_file, state);
+  parts.read_from_file_parallel(in_file, state);
   parts.write_to_file_parallel(outfile_hand, state);
-#endif
+
   return 0;
 }
 catch (...)

@@ -47,6 +47,18 @@ struct dataset_attributes : virtual dataset_base
     read_attribute(dataset, "to_cgs", to_cgs);
     read_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
+
+  virtual void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state)
+  {
+    auto dataset = grp.openDataSet(dataset_name);
+    read_attribute(dataset, "a_scaling", a_scaling);
+    read_attribute(dataset, "h_scaling", h_scaling);
+    read_attribute(dataset, "length_scaling", length_scaling);
+    read_attribute(dataset, "mass_scaling", mass_scaling);
+    read_attribute(dataset, "to_cgs", to_cgs);
+    read_attribute(dataset, "velocity_scaling", velocity_scaling);
+  }
+
   virtual void distribute_data(const mpicpp::comm &comm) override
   {
     comm.ibcast(a_scaling, 0);
@@ -118,6 +130,11 @@ struct dataset_data : virtual dataset_base
     data_chunk.resize(total_elem);
     ds.read(data_chunk.data(), get_pred_type<VT>());
   }
+
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state)
+  {
+  }
+
   void distribute_data(const mpicpp::comm &comm) override
   {
     // Broadcast dataspace info
@@ -236,6 +253,11 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
     dataset_data<VT>::read_dataset_1proc(grp, dataset_name, rank);
     dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
   }
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state) override
+  {
+    dataset_data<VT>::read_dataset_parallel(grp, dataset_name, state);
+    dataset_attributes::read_dataset_parallel(grp, dataset_name, state);
+  }
   void distribute_data(const mpicpp::comm &comm) override
   {
     dataset_data<VT>::distribute_data(comm);
@@ -257,6 +279,7 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
 struct PartTypeBase
 {
   virtual void read_from_file_1proc(const H5::H5File &, const mpi_state &) = 0;
+  virtual void read_from_file_parallel(const H5::H5File &, const mpi_state &) = 0;
   virtual void distribute_data(const mpicpp::comm &) = 0;
   virtual void gather_data(const mpicpp::comm &) = 0;
   virtual void write_to_file_parallel(const H5::H5File &file, const mpi_state &) const = 0;
@@ -292,6 +315,13 @@ struct PartTypeCommon : PartTypeBase
     auto group = file.openGroup(Derived::group_name());
     for_each_dataset([&](auto &ds)
                      { ds.read_dataset_1proc(group, ds.name, state.i_rank); });
+  }
+
+  void read_from_file_parallel(const H5::H5File &file, const mpi_state &state) override
+  {
+    auto group = file.openGroup(Derived::group_name());
+    for_each_dataset([&](auto &ds)
+                     { ds.read_dataset_parallel(group, ds.name, state); });
   }
 
   void distribute_data(const mpicpp::comm &comm) override
@@ -596,6 +626,20 @@ struct part_groups
       pt4->read_from_file_1proc(file, state);
     if (pt5)
       pt5->read_from_file_1proc(file, state);
+  }
+
+  void read_from_file_parallel(const H5::H5File &file, const mpi_state &state)
+  {
+    if (pt0)
+      pt0->read_from_file_parallel(file, state);
+    if (pt1)
+      pt1->read_from_file_parallel(file, state);
+    if (pt3)
+      pt3->read_from_file_parallel(file, state);
+    if (pt4)
+      pt4->read_from_file_parallel(file, state);
+    if (pt5)
+      pt5->read_from_file_parallel(file, state);
   }
 
   void distribute_data(const mpicpp::comm &comm)
