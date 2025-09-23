@@ -131,7 +131,6 @@ struct dataset_data : virtual dataset_base
     ds.read(data_chunk.data(), get_pred_type<VT>());
   }
 
-  // TODO: filling this (properly) should make everything work hopefully
   void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm)
   {
     auto ds = grp.openDataSet(dataset_name);
