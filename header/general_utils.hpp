@@ -9,7 +9,7 @@
 
 #define DEBUG_PRINT fmt::print("reached {} in file {}\n", __LINE__, __FILE__)
 
-#define PRINT_VAR(var) fmt::print("{:25s} : {}\n", #var, var);
+#define PRINT_VAR(var) fmt::print(" {:25s} : {}\n", #var, var);
 
 #define ROOT_PROC_WORK(rank, CODE) \
   MPI_Barrier(MPI_COMM_WORLD);     \

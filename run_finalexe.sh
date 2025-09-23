@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --output=logs_out_%x/jobID%j.out
 #SBATCH --error=logs_err_%x/jobID%j.err
-#SBATCH --time=0:59:0
+#SBATCH --time=0:20:0
 #SBATCH --partition=dc-cpu-bigmem
 
 module purge

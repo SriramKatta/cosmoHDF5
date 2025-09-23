@@ -48,7 +48,7 @@ struct dataset_attributes : virtual dataset_base
     read_attribute(dataset, "velocity_scaling", velocity_scaling);
   }
 
-  virtual void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state)
+  virtual void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm)
   {
     auto dataset = grp.openDataSet(dataset_name);
     read_attribute(dataset, "a_scaling", a_scaling);
@@ -96,11 +96,11 @@ struct dataset_attributes : virtual dataset_base
 template <typename VT>
 struct dataset_data : virtual dataset_base
 {
-  std::vector<VT> data_chunk;
-  std::vector<hsize_t> local_dataspace_dims;
-  std::vector<hsize_t> local_dataspace_max_dims;
-  std::vector<hsize_t> total_dataspace_dims;
-  std::string name;
+  std::vector<VT> data_chunk{};
+  std::vector<hsize_t> local_dataspace_dims{};
+  std::vector<hsize_t> local_dataspace_max_dims{};
+  std::vector<hsize_t> total_dataspace_dims{};
+  std::string name{};
 
   dataset_data(const std::string &name_) : name(name_) {}
 
@@ -131,9 +131,58 @@ struct dataset_data : virtual dataset_base
     ds.read(data_chunk.data(), get_pred_type<VT>());
   }
 
-  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state)
+  // TODO: filling this (properly) should make everything work hopefully
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm)
   {
-    // TODO: filling this (properly) should make everything work hopefully
+    auto ds = grp.openDataSet(dataset_name);
+    auto file_space = ds.getSpace();
+
+    auto rank = file_space.getSimpleExtentNdims();
+    total_dataspace_dims.resize(rank);
+    file_space.getSimpleExtentDims(total_dataspace_dims.data());
+
+    // Partition only along first dimension
+    const hsize_t N0 = total_dataspace_dims[0];
+    const int P = comm.size();
+    const int R = comm.rank();
+
+    hsize_t base = N0 / P;
+    hsize_t rem = N0 % P;
+
+    // Give one extra element to ranks < rem
+    hsize_t local0 = base + (R < static_cast<int>(rem) ? 1 : 0);
+
+    // Compute offset along dim0 using MPI_Exscan
+    hsize_t offset0 = 0;
+    hsize_t mycount = local0;
+    MPI_Exscan(&mycount, &offset0, 1, mpicpp::predefined_datatype<hsize_t>().get(), MPI_SUM, comm.get());
+    if (R == 0)
+      offset0 = 0; // Exscan leaves rank 0 undefined
+
+    // Build local shape
+    local_dataspace_dims = total_dataspace_dims;
+    local_dataspace_dims[0] = local0;
+
+    auto elems = std::accumulate(local_dataspace_dims.begin(), local_dataspace_dims.end(), hsize_t{1}, std::multiplies<hsize_t>());
+    data_chunk.resize(elems);
+
+    // Memory dataspace
+    H5::DataSpace mem_space(rank, local_dataspace_dims.data());
+
+    // Select hyperslab in file dataspace
+    std::vector<hsize_t> start(rank, 0);
+    std::vector<hsize_t> count(local_dataspace_dims.begin(), local_dataspace_dims.end());
+    start[0] = offset0;
+
+    file_space.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
+
+    // Collective transfer properties
+    auto xfer = create_mpi_xfer();
+
+    // fmt::print("rank_island {}\n start:{}\n count{}\n filespace:{}\n memspace:{}\n", comm.rank(), start, count, total_dataspace_dims, local_dataspace_dims);
+
+    // Read
+    ds.read(data_chunk.data(), get_pred_type<VT>(), mem_space, file_space, xfer);
   }
 
   void distribute_data(const mpicpp::comm &comm) override
@@ -164,8 +213,8 @@ struct dataset_data : virtual dataset_base
     {
       send_disps[i] = send_disps[i - 1] + send_counts[i - 1];
     }
-    // comm.ibcast(send_counts, 0); // TODO : MAY BE REDUNDANT
-    // comm.ibcast(send_disps, 0);  // TODO : MAY BE REDUNDANT
+    // comm.ibcast(send_counts, 0); //  MAY BE REDUNDANT // commneted since redundent
+    // comm.ibcast(send_disps, 0);  //  MAY BE REDUNDANT // commneted since redundent
     std::vector<VT> local_data(local_entries_count);
     comm.iscatterv(data_chunk, send_counts, send_disps, local_data, 0);
     data_chunk = std::move(local_data);
@@ -246,18 +295,18 @@ struct dataset_wattr : public dataset_attributes, public dataset_data<VT>
   dataset_wattr(const std::string &name_) : dataset_data<VT>(name_) {}
   void print() const
   {
-    dataset_attributes::print();
     dataset_data<VT>::print();
+    dataset_attributes::print();
   }
   void read_dataset_1proc(const H5::Group &grp, const std::string &dataset_name, const int rank) override
   {
     dataset_data<VT>::read_dataset_1proc(grp, dataset_name, rank);
     dataset_attributes::read_dataset_1proc(grp, dataset_name, rank);
   }
-  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpi_state &state) override
+  void read_dataset_parallel(const H5::Group &grp, const std::string &dataset_name, const mpicpp::comm &comm) override
   {
-    dataset_data<VT>::read_dataset_parallel(grp, dataset_name, state);
-    dataset_attributes::read_dataset_parallel(grp, dataset_name, state);
+    dataset_data<VT>::read_dataset_parallel(grp, dataset_name, comm);
+    dataset_attributes::read_dataset_parallel(grp, dataset_name, comm);
   }
   void distribute_data(const mpicpp::comm &comm) override
   {
@@ -322,7 +371,7 @@ struct PartTypeCommon : PartTypeBase
   {
     auto group = file.openGroup(Derived::group_name());
     for_each_dataset([&](auto &ds)
-                     { ds.read_dataset_parallel(group, ds.name, state); });
+                     { ds.read_dataset_parallel(group, ds.name, state.island_comm); });
   }
 
   void distribute_data(const mpicpp::comm &comm) override
