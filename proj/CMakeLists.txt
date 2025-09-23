@@ -1,3 +1,3 @@
-add_subdirectory(SRPW)
-add_subdirectory(SRSW)
-add_subdirectory(PRPW)
+add_subdirectory(01_SRSW)
+add_subdirectory(02_SRPW)
+add_subdirectory(03_PRPW)
