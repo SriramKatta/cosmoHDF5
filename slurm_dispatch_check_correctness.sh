@@ -24,6 +24,7 @@ if [ ! -d "$TNG_DIR" ]; then
     exit 1
 fi
 
+echo "using the exe $EXE_NAME"
 
 sbatch --nodes=2 --time=0:30:0 run_finalexe.sh "$EXE_NAME" "${TNG_DIR}/TNG100n455/"
 echo "${TNG_DIR}/TNG100n455/"
