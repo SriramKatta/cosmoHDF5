@@ -44,4 +44,4 @@ echo "${TNG_DIR}/TNG100n1820/"
 sbatch --nodes=4 --time=0:30:0 run_finalexe.sh "$EXE_NAME" "${TNG_DIR}/TNG100n1820Dark/"
 echo "${TNG_DIR}/TNG100n1820Dark/"
 
-watch squeue --me
+# watch squeue --me

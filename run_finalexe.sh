@@ -17,7 +17,9 @@ module load CMake
 
 # Get directory from command line
 EXE_NAME=$(realpath "$1")
+BASE_EXE_NAME=$(basename "$EXE_NAME")
 DIR1=$(realpath "$2")
+DIR2=${DIR1}/out_${BASE_EXE_NAME}
 
 if [ ! -d "$DIR1" ]; then
     echo "Error: $DIR1 is not a directory."
@@ -28,6 +30,6 @@ srun -N $SLURM_NNODES -n $((SLURM_NTASKS_PER_NODE * SLURM_NNODES)) "$EXE_NAME" "
 
 echo "Running hdf5diff.sh to compare input and output files..."
 
-./hdf5diff.sh "$DIR1" "$DIR1/out"
+./hdf5diff.sh "${DIR1}" "${DIR2}"
 
 echo "Comparison complete."

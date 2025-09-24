@@ -1,10 +1,10 @@
 #pragma once
 
+#include <H5Cpp.h>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
-#include <mpicpp.hpp>
-#include <H5Cpp.h>
 #include <filesystem>
+#include <mpicpp.hpp>
 #include "mpi_helpers.hpp"
 
 #define DEBUG_PRINT fmt::print("reached {} in file {}\n", __LINE__, __FILE__)
@@ -13,8 +13,7 @@
 
 #define ROOT_PROC_WORK(rank, CODE) \
   MPI_Barrier(MPI_COMM_WORLD);     \
-  if ((rank) == 0)                 \
-  {                                \
+  if ((rank) == 0) {               \
     CODE;                          \
   }                                \
   MPI_Barrier(MPI_COMM_WORLD);
@@ -25,47 +24,33 @@
   auto duration = MPI_Wtime() - duration##start;                      \
   local_comm.iallreduce(&duration, 1, mpicpp::op::max());
 
-int exception_handler()
-{
-  try
-  {
+int exception_handler() {
+  try {
     throw;
-  }
-  catch (const std::filesystem::filesystem_error &e)
-  {
+  } catch (const std::filesystem::filesystem_error &e) {
     fmt::print(stderr, "Filesystem error caught: {}\n", e.what());
-  }
-  catch (const mpicpp::exception &e)
-  {
+  } catch (const mpicpp::exception &e) {
     fmt::print(stderr, "MPI exception caught: {}\n", e.what());
-  }
-  catch (const std::runtime_error &e)
-  {
+  } catch (const std::runtime_error &e) {
     fmt::print(stderr, "Runtime error: {}\n", e.what());
-  }
-  catch (const H5::Exception &e)
-  {
+  } catch (const H5::Exception &e) {
     e.printErrorStack();
-  }
-  catch (const std::exception &e)
-  {
+  } catch (const std::exception &e) {
     fmt::print(stderr, "Exception caught: {}\n", e.what());
-  }
-  catch (...)
-  {
+  } catch (...) {
     fmt::print(stderr, "Unknown exception caught\n");
   }
 
   return EXIT_FAILURE;
 }
 
-std::filesystem::path create_out_files_dir(const std::filesystem::path &in_files_dir, const mpi_state &state)
-{
-  auto out_file_dir = in_files_dir / "out";
-  if (state.w_rank == 0)
-  {
+std::filesystem::path create_out_files_dir(const std::filesystem::path &in_files_dir,
+                                           const mpi_state &state,
+                                           const std::string &outdirname = "out") {
+  auto out_file_dir = in_files_dir / outdirname;
+  if (state.w_rank == 0) {
     std::filesystem::create_directories(out_file_dir);
   }
-  state.world_comm.ibarrier(); // ensure directory is created before any rank tries to write to it
+  state.world_comm.ibarrier();  // ensure directory is created before any rank tries to write to it
   return out_file_dir;
 }

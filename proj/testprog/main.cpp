@@ -13,7 +13,9 @@ int main(int argc, char **argv) try {
   mpicpp::environment env(&argc, &argv);
   mpi_state state(numfiles);
 
-  auto out_file_dir = create_out_files_dir(in_files_dir, state);
+  std::filesystem::path p(argv[0]);
+  const auto out_dirname = fmt::format("out_{}", p.filename().string());
+  auto out_file_dir      = create_out_files_dir(in_files_dir, state, out_dirname);
 
   // --------------------
   // Input file handle
