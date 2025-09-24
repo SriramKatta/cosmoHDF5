@@ -92,11 +92,11 @@ int main(int argc, char **argv) try {
   // --------------------
   // PARTICLES
   // --------------------
-  part_groups parts(header);
+  part_groups parts;
 #ifdef READ_PARALLEL
-  parts.read_from_file_parallel(in_file, state);
+  parts.read_from_file_parallel(in_file, state, header);
 #else
-  parts.read_from_file_1proc(in_file, state);
+  parts.read_from_file_1proc(in_file, state,header);
   parts.distribute_data(state.island_comm);
 #endif
 

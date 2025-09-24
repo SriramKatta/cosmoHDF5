@@ -17,9 +17,14 @@ int main(int argc, char **argv) try {
   const auto out_dirname = fmt::format("out_{}", p.filename().string());
   auto out_file_dir      = create_out_files_dir(in_files_dir, state, out_dirname);
 
-  // --------------------
-  // Input file handle
-  // --------------------
+  header_group header;
+  param_group params;
+  config_group dconfig;
+  part_groups parts;
+
+// --------------------
+// Read
+// --------------------
 #ifdef READ_PARALLEL
   auto in_file = create_parallel_file_handle(in_files_dir, state, H5F_ACC_RDONLY);
 #else
@@ -35,75 +40,38 @@ int main(int argc, char **argv) try {
   auto outfile_hand = create_serial_file_handle(out_file_dir, state, H5F_ACC_TRUNC);
 #endif
 
-  // --------------------
-  // HEADER
-  // --------------------
-  header_group header;
+
 #ifdef READ_PARALLEL
   header.read_from_file_parallel(in_file);
+  params.read_from_file_parallel(in_file);
+  dconfig.read_from_file_parallel(in_file);
+  parts.read_from_file_parallel(in_file, state, header);
 #else
   header.read_from_file_1proc(in_file, state);
-  header.distribute_data(state.island_comm);
-#endif
-
-#ifdef WRITE_PARALLEL
-  header.write_to_file_parallel(outfile_hand);
-#else
-  header.gather_data(state.island_comm);
-  header.write_to_file_1proc(outfile_hand, state);
-#endif
-
-  // --------------------
-  // CONFIG
-  // --------------------
-  config_group dconfig;
-#ifdef READ_PARALLEL
-  dconfig.read_from_file_parallel(in_file);
-#else
-  dconfig.read_from_file_1proc(in_file, state);
-  dconfig.distribute_data(state.island_comm);
-#endif
-
-#ifdef WRITE_PARALLEL
-  dconfig.write_to_file_parallel(outfile_hand);
-#else
-  dconfig.gather_data(state.island_comm);
-  dconfig.write_to_file_1proc(outfile_hand, state);
-#endif
-
-  // --------------------
-  // PARAMS
-  // --------------------
-  param_group params;
-#ifdef READ_PARALLEL
-  params.read_from_file_parallel(in_file);
-#else
   params.read_from_file_1proc(in_file, state);
+  dconfig.read_from_file_1proc(in_file, state);
+  parts.read_from_file_1proc(in_file, state, header);
+  header.distribute_data(state.island_comm);
   params.distribute_data(state.island_comm);
-#endif
-
-#ifdef WRITE_PARALLEL
-  params.write_to_file_parallel(outfile_hand);
-#else
-  params.gather_data(state.island_comm);
-  params.write_to_file_1proc(outfile_hand, state);
-#endif
-
-  // --------------------
-  // PARTICLES
-  // --------------------
-  part_groups parts(header);
-#ifdef READ_PARALLEL
-  parts.read_from_file_parallel(in_file, state);
-#else
-  parts.read_from_file_1proc(in_file, state);
+  dconfig.distribute_data(state.island_comm);
   parts.distribute_data(state.island_comm);
 #endif
 
 #ifdef WRITE_PARALLEL
+  header.write_to_file_parallel(outfile_hand);
+  dconfig.write_to_file_parallel(outfile_hand);
+  params.write_to_file_parallel(outfile_hand);
   parts.write_to_file_parallel(outfile_hand, state);
 #else
+
+  header.gather_data(state.island_comm);
+  dconfig.gather_data(state.island_comm);
+  params.gather_data(state.island_comm);
   parts.gather_data(state.island_comm);
+
+  header.write_to_file_1proc(outfile_hand, state);
+  dconfig.write_to_file_1proc(outfile_hand, state);
+  params.write_to_file_1proc(outfile_hand, state);
   parts.write_to_file_1proc(outfile_hand, state);
 #endif
 
