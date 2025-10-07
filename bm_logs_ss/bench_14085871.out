@@ -1,0 +1,6 @@
+Executable: /p/project1/punch_astro/katta3/cosmo_copy/build/bin/bm_sread_swrite
+Found 64 files in /p/scratch/punch_astro/katta3/data/TNG100n1820Dark/
+Max cores across nodes: 256
+Layout mode: packed
+✅ Benchmark finished. Results in:
+   Packed: results_ss/bm_sread_swrite_TNG100n1820Dark_packed.csv

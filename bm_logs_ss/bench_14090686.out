@@ -1,0 +1,26 @@
+Executable: /p/project1/punch_astro/katta3/cosmo_copy/build/bin/bm_sread_swrite
+Found 1 files in /p/scratch/punch_astro/katta3/data/
+Max cores across nodes: 512
+Layout mode: packed
+RUN 1 Start
+RUN 1 Done
+RUN 2 Start
+RUN 2 Done
+RUN 3 Start
+RUN 3 Done
+RUN 4 Start
+RUN 4 Done
+RUN 5 Start
+RUN 5 Done
+RUN 6 Start
+RUN 6 Done
+RUN 7 Start
+RUN 7 Done
+RUN 8 Start
+RUN 8 Done
+RUN 9 Start
+RUN 9 Done
+RUN 10 Start
+RUN 10 Done
+✅ Benchmark finished. Results in:
+   Packed: results_ss/bm_sread_swrite_data_packed.csv

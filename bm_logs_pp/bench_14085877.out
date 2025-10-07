@@ -1,0 +1,25 @@
+Executable: /p/project1/punch_astro/katta3/cosmo_copy/build/bin/bm_pread_pwrite
+Found 64 files in /p/scratch/punch_astro/katta3/data/TNG100n1820Dark/
+Max cores across nodes: 1280
+CSV output: results_pp/bm_pread_pwrite_TNG100n1820Dark.csv
+▶️ Testing with 64 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 128 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 192 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 256 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 320 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 384 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 448 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 512 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 576 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 640 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 704 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 768 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 832 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 896 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 960 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1024 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1088 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1152 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1216 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1280 ranks (multiple of numfiles=64)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...✅ Benchmark finished. Results in results_pp/bm_pread_pwrite_TNG100n1820Dark.csv

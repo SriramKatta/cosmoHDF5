@@ -1,0 +1,27 @@
+Executable: /p/project1/punch_astro/katta3/cosmo_copy/build/bin/bm_pread_pwrite
+Found 56 files in /p/scratch/punch_astro/katta3/data/TNG100n910/
+Max cores across nodes: 1280
+CSV output: results_pp/bm_pread_pwrite_TNG100n910.csv
+▶️ Testing with 56 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 112 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 168 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 224 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 280 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 336 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 392 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 448 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 504 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 560 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 616 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 672 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 728 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 784 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 840 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 896 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 952 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1008 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1064 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1120 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1176 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...▶️ Testing with 1232 ranks (multiple of numfiles=56)
+   Run 1 ...   Run 2 ...   Run 3 ...   Run 4 ...   Run 5 ...   Run 6 ...   Run 7 ...   Run 8 ...   Run 9 ...   Run 10 ...✅ Benchmark finished. Results in results_pp/bm_pread_pwrite_TNG100n910.csv

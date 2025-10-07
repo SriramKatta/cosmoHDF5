@@ -1,0 +1,18 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) Stages/2025
+error: *** job 14085869 CANCELLED DUE TO TIME LIMIT ***
+error: *** step 14085869.14 CANCELLED DUE TO TIME LIMIT ***
+srun: Job step aborted: Waiting up to 6 seconds for job step to finish.
+srun: error: jrc0761: tasks 0-7: Terminated
+srun: error: Slurm job 14085869 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085869
+srun: error: Slurm job 14085869 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085869
+srun: error: Slurm job 14085869 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085869
+srun: error: Slurm job 14085869 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085869
+srun: error: Slurm job 14085869 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085869

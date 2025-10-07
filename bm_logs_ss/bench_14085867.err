@@ -1,0 +1,39 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) Stages/2025
+error: *** job 14085867 CANCELLED DUE TO TIME LIMIT ***
+error: *** step 14085867.5 CANCELLED DUE TO TIME LIMIT ***
+srun: Job step aborted: Waiting up to 6 seconds for job step to finish.
+srun: error: jrc0802: task 1: Terminated
+srun: error: jrc0804: task 3: Terminated
+srun: error: jrc0803: task 2: Terminated
+srun: error: jrc0801: task 0: Terminated
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867
+srun: error: Slurm job 14085867 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 14085867

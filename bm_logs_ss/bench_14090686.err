@@ -1,0 +1,44 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) Stages/2025
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0093: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0096: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0093: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0096: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0093: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0096: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0093: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0096: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0093: task 0: Exited with exit code 1
+srun: warning: can't run 1 processes on 2 nodes, setting nnodes to 1
+Runtime error: No snap HDF5 files found in directory: /p/scratch/punch_astro/katta3/data/
+
+srun: error: jrc0096: task 0: Exited with exit code 1

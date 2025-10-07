@@ -1,0 +1,7 @@
+Executable: /p/project1/punch_astro/katta3/cosmo_copy/build/bin/bm_sread_swrite
+Found 8 files in /p/scratch/punch_astro/katta3/data/TNG100n910Dark/
+Max cores across nodes: 2048
+Layout mode: cyclic
+✅ Benchmark finished. Results in:
+   Packed: results_ss/bm_sread_swrite_TNG100n910Dark_packed.csv
+   Spread: results_ss/bm_sread_swrite_TNG100n910Dark_spread.csv

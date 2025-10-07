@@ -1,0 +1,31 @@
+[  9%] Built target mpicpp
+[ 23%] Built target fmt
+[ 33%] Built target test_sread_swrite
+[ 42%] Built target test_sread_pwrite
+[ 52%] Built target test_pread_swrite
+[ 61%] Built target test_pread_pwrite
+[ 71%] Built target bm_sread_swrite
+[ 80%] Built target bm_sread_pwrite
+[ 90%] Built target bm_pread_swrite
+[100%] Built target bm_pread_pwrite
+Submitted batch job 14085861
+Submitted batch job 14085862
+Submitted batch job 14085863
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n455/ on 7 nodes
+Submitted batch job 14085864
+Submitting CYCLIC for /p/scratch/punch_astro/katta3/data/TNG100n455/ on 7 nodes
+Submitted batch job 14085865
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n455Dark/ on 4 nodes
+Submitted batch job 14085866
+Submitting CYCLIC for /p/scratch/punch_astro/katta3/data/TNG100n455Dark/ on 4 nodes
+Submitted batch job 14085867
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n910Dark/ on 8 nodes
+Submitted batch job 14085868
+Submitting CYCLIC for /p/scratch/punch_astro/katta3/data/TNG100n910Dark/ on 8 nodes
+Submitted batch job 14085869
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n910/ on 1 nodes
+Submitted batch job 14085870
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n1820Dark/ on 1 nodes
+Submitted batch job 14085871
+Submitting BLOCK for /p/scratch/punch_astro/katta3/data/TNG100n1820/ on 4 nodes
+Submitted batch job 14085872
