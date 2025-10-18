@@ -19,7 +19,6 @@ It provides a interface to efficiently **read and write cosmological snapshot da
 
 ## 🔧 Build Instructions
 
-### 1. Clone the repository
 ```bash
 git clone https://github.com/SriramKatta/cosmoHDF5.git
 cd cosmoHDF5
